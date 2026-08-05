@@ -1,19 +1,63 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/main"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    android:orientation="vertical"
+    android:background="#0D1117">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#161B22"
+        android:padding="16dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="📡 WiFi Direct Chat"
+            android:textSize="20sp"
+            android:textColor="#58A6FF"
+            android:textStyle="bold"/>
+
+        <Button
+            android:id="@+id/btn_discover"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Dhundho"
+            android:backgroundTint="#238636"
+            android:textColor="#FFFFFF"/>
+
+    </LinearLayout>
 
     <TextView
-        android:layout_width="wrap_content"
+        android:id="@+id/tv_status"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Hello World!"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:text="WiFi Direct ready hai"
+        android:textColor="#8B949E"
+        android:padding="12dp"
+        android:textSize="13sp"/>
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="NEARBY DEVICES:"
+        android:textColor="#58A6FF"
+        android:paddingStart="16dp"
+        android:paddingTop="4dp"
+        android:textSize="11sp"
+        android:textStyle="bold"/>
+
+    <ListView
+        android:id="@+id/list_peers"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#0D1117"
+        android:divider="#21262D"
+        android:dividerHeight="1dp"/>
+
+</LinearLayout>
