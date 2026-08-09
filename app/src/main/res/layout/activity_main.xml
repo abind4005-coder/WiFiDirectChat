@@ -1,34 +1,64 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#0D1117"
-    android:orientation="horizontal">
+    android:orientation="vertical"
+    android:background="#0D1117">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="#161B22"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:padding="16dp">
+        android:padding="16dp"
+        android:gravity="center">
 
         <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="📡 WiFi Direct Mesh Chat"
+            android:textSize="20sp"
+            android:textColor="#58A6FF"
+            android:textStyle="bold"/>
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#21262D"
+        android:orientation="horizontal"
+        android:padding="14dp"
+        android:layout_margin="10dp"
+        android:gravity="center_vertical">
+
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="📡 WiFi Direct Chat"
-            android:textColor="#58A6FF"
-            android:textSize="20sp"
-            android:textStyle="bold" />
+            android:orientation="vertical">
 
-        <Button
-            android:id="@+id/btn_discover"
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🌐 Background Relay Router"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:textStyle="bold"/>
+
+            <TextView
+                android:id="@+id/tv_router_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Router Mode: OFF"
+                android:textColor="#8B949E"
+                android:textSize="11sp"/>
+        </LinearLayout>
+
+        <Switch
+            android:id="@+id/switch_router"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:backgroundTint="#238636"
-            android:text="Dhundho"
-            android:textColor="#FFFFFF" />
+            android:layout_height="wrap_content"/>
 
     </LinearLayout>
 
@@ -36,27 +66,47 @@
         android:id="@+id/tv_status"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="12dp"
-        android:text="WiFi Direct ready hai"
+        android:text="Ready | तैयार है"
         android:textColor="#8B949E"
-        android:textSize="13sp" />
+        android:gravity="center"
+        android:padding="6dp"
+        android:textSize="13sp"/>
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingStart="16dp"
-        android:paddingTop="4dp"
-        android:text="NEARBY DEVICES:"
+        android:text="Nearby Devices | आस-पास के डिवाइस"
         android:textColor="#58A6FF"
-        android:textSize="11sp"
-        android:textStyle="bold" />
+        android:gravity="center"
+        android:paddingTop="4dp"
+        android:textSize="12sp"
+        android:textStyle="bold"/>
 
     <ListView
         android:id="@+id/list_peers"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:background="#0D1117"
         android:divider="#21262D"
-        android:dividerHeight="1dp" />
+        android:dividerHeight="1dp"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:padding="14dp"
+        android:background="#161B22">
+
+        <Button
+            android:id="@+id/btn_discover"
+            android:layout_width="200dp"
+            android:layout_height="48dp"
+            android:text="🔍 Search | खोजें"
+            android:textSize="15sp"
+            android:backgroundTint="#238636"
+            android:textColor="#FFFFFF"/>
+
+    </LinearLayout>
 
 </LinearLayout>

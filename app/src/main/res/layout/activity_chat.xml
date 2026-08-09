@@ -6,7 +6,7 @@
     android:orientation="vertical"
     android:background="#0D1117">
 
-    <!-- Header -->
+    <!-- Header Bar -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="56dp"
@@ -20,32 +20,33 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Device Name"
-            android:textColor="#E6EDF3"
+            android:textColor="#58A6FF"
             android:textSize="18sp"
             android:textStyle="bold"/>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="🔐 Encrypted"
+            android:text="🔐 AES-256 Encrypted"
             android:textColor="#3FB950"
-            android:textSize="11sp"/>
+            android:textSize="12sp"
+            android:textStyle="bold"/>
 
     </LinearLayout>
 
-    <!-- Messages List -->
+    <!-- Messages List with High Visibility Divider -->
     <ListView
         android:id="@+id/list_messages"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         android:background="#0D1117"
-        android:divider="#21262D"
+        android:divider="#30363D"
         android:dividerHeight="1dp"
         android:stackFromBottom="true"
         android:transcriptMode="alwaysScroll"/>
 
-    <!-- Message Input Area -->
+    <!-- Bottom Input Box -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -59,8 +60,8 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:hint="Message likho..."
-            android:textColor="#E6EDF3"
+            android:hint="Message likhein / Type message..."
+            android:textColor="#FFFFFF"
             android:textColorHint="#8B949E"
             android:padding="12dp"
             android:textSize="15sp"
@@ -70,12 +71,12 @@
 
         <Button
             android:id="@+id/btn_send"
-            android:layout_width="48dp"
+            android:layout_width="60dp"
             android:layout_height="48dp"
             android:layout_marginStart="8dp"
             android:text="➤"
             android:textSize="18sp"
-            android:backgroundTint="#1F6FEB"
+            android:backgroundTint="#238636"
             android:textColor="#FFFFFF"/>
 
     </LinearLayout>

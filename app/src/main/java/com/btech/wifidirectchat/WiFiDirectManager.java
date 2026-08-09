@@ -14,74 +14,84 @@ public class WiFiDirectManager {
     private final WifiP2pManager.Channel channel;
 
     public WiFiDirectManager(Context context) {
-        manager = (WifiP2pManager) context
-                .getSystemService(Context.WIFI_P2P_SERVICE);
-        channel = manager.initialize(
-                context,
-                context.getMainLooper(),
-                null
-        );
+        manager = (WifiP2pManager) context.getSystemService(Context.WIFI_P2P_SERVICE);
+        channel = manager != null ? manager.initialize(context, context.getMainLooper(), null) : null;
         Log.d(TAG, "WiFi Direct Ready!");
     }
 
-    // Nearby phones dhundho
     public void discoverPeers() {
+        if (manager == null || channel == null) return;
+
+        // Pehle purani memory clear karo taaki re-connect ho sake
+        disconnect();
+
         try {
-            manager.discoverPeers(channel,
-                    new WifiP2pManager.ActionListener() {
-                        @Override
-                        public void onSuccess() {
-                            Log.d(TAG, "Discovery shuru!");
-                        }
-                        @Override
-                        public void onFailure(int reason) {
-                            Log.e(TAG, "Discovery fail: " + reason);
-                        }
-                    });
+            manager.discoverPeers(channel, new WifiP2pManager.ActionListener() {
+                @Override
+                public void onSuccess() {
+                    Log.d(TAG, "Discovery started!");
+                }
+                @Override
+                public void onFailure(int reason) {
+                    Log.e(TAG, "Discovery failed: " + reason);
+                }
+            });
         } catch (SecurityException e) {
-            Log.e(TAG, "Permission nahi hai: " + e.getMessage());
+            Log.e(TAG, "Permission missing: " + e.getMessage());
         }
     }
 
-    // Mili hui devices ki list lo
     public void getPeers(WifiP2pManager.PeerListListener listener) {
+        if (manager == null || channel == null) return;
         try {
             manager.requestPeers(channel, listener);
         } catch (SecurityException e) {
-            Log.e(TAG, "Permission nahi hai: " + e.getMessage());
+            Log.e(TAG, "Permission missing: " + e.getMessage());
         }
     }
 
-    // Kisi device se connect karo
     public void connect(WifiP2pDevice device) {
+        if (manager == null || channel == null) return;
+
         WifiP2pConfig config = new WifiP2pConfig();
         config.deviceAddress = device.deviceAddress;
         config.wps.setup = WpsInfo.PBC;
+
         try {
-            manager.connect(channel, config,
-                    new WifiP2pManager.ActionListener() {
-                        @Override
-                        public void onSuccess() {
-                            Log.d(TAG, "Connection request bheja!");
-                        }
-                        @Override
-                        public void onFailure(int reason) {
-                            Log.e(TAG, "Connect fail: " + reason);
-                        }
-                    });
+            manager.connect(channel, config, new WifiP2pManager.ActionListener() {
+                @Override
+                public void onSuccess() {
+                    Log.d(TAG, "Connection request sent!");
+                }
+                @Override
+                public void onFailure(int reason) {
+                    Log.e(TAG, "Connect failed: " + reason);
+                }
+            });
         } catch (SecurityException e) {
-            Log.e(TAG, "Permission nahi hai: " + e.getMessage());
+            Log.e(TAG, "Permission missing: " + e.getMessage());
         }
     }
 
-    // Connection info lo
     public void getInfo(WifiP2pManager.ConnectionInfoListener listener) {
+        if (manager == null || channel == null) return;
         manager.requestConnectionInfo(channel, listener);
     }
 
-    // Disconnect karo
+    // Forcefully Purane Connections Remove Karein
     public void disconnect() {
-        manager.removeGroup(channel, null);
-        Log.d(TAG, "Disconnected!");
+        if (manager == null || channel == null) return;
+
+        manager.removeGroup(channel, new WifiP2pManager.ActionListener() {
+            @Override
+            public void onSuccess() {
+                Log.d(TAG, "Group removed / Memory cleared!");
+            }
+
+            @Override
+            public void onFailure(int reason) {
+                Log.d(TAG, "No active group to remove.");
+            }
+        });
     }
 }

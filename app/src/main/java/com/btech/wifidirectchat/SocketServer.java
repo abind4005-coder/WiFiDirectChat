@@ -16,7 +16,6 @@ public class SocketServer extends Thread {
     private boolean running = true;
     private MessageListener listener;
 
-    // Constructor
     public SocketServer(MessageListener listener) {
         this.listener = listener;
     }
@@ -24,29 +23,25 @@ public class SocketServer extends Thread {
     @Override
     public void run() {
         try {
-            // Port 8888 pe "sunna" shuru karo
             serverSocket = new ServerSocket(PORT);
-            Log.d(TAG, "Server start hua! Port: " + PORT);
+            serverSocket.setReuseAddress(true);
+            Log.d(TAG, "Server Started on Port: " + PORT);
 
             while (running) {
-                // Client ka wait karo
                 Socket client = serverSocket.accept();
-                Log.d(TAG, "Client connected: "
-                        + client.getInetAddress());
+                String senderIP = client.getInetAddress().getHostAddress();
 
-                // Message padho
                 BufferedReader reader = new BufferedReader(
-                        new InputStreamReader(
-                                client.getInputStream()
-                        )
+                        new InputStreamReader(client.getInputStream())
                 );
 
                 String message = reader.readLine();
 
                 if (message != null && !message.isEmpty()) {
-                    Log.d(TAG, "Message aaya: " + message);
-                    // UI thread pe message dikhao
-                    listener.onMessageReceived(message);
+                    Log.d(TAG, "Received: " + message);
+                    if (listener != null) {
+                        listener.onMessageReceived(message, senderIP);
+                    }
                 }
 
                 client.close();
@@ -54,25 +49,23 @@ public class SocketServer extends Thread {
 
         } catch (IOException e) {
             if (running) {
-                Log.e(TAG, "Server error: " + e.getMessage());
+                Log.e(TAG, "Server Error: " + e.getMessage());
             }
         }
     }
 
-    // Server band karo
     public void stopServer() {
         running = false;
         try {
-            if (serverSocket != null) {
+            if (serverSocket != null && !serverSocket.isClosed()) {
                 serverSocket.close();
             }
         } catch (IOException e) {
-            Log.e(TAG, "Stop error: " + e.getMessage());
+            Log.e(TAG, "Stop Error: " + e.getMessage());
         }
     }
 
-    // Message aane pe kya karo
     public interface MessageListener {
-        void onMessageReceived(String message);
+        void onMessageReceived(String message, String senderIP);
     }
 }
