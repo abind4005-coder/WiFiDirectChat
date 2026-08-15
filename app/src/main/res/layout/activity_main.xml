@@ -4,32 +4,46 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#0D1117">
+    android:background="#0A0E17">
 
+    <!-- Top Header using App Name Dynamic Resource -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="#161B22"
+        android:layout_height="70dp"
+        android:background="#121824"
         android:padding="16dp"
-        android:gravity="center">
+        android:elevation="8dp"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="🌐 DMS P2P"
+            android:textSize="22sp"
+            android:textColor="#00F2FE"
+            android:textStyle="bold"/>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="📡 WiFi Direct Mesh Chat"
-            android:textSize="20sp"
-            android:textColor="#58A6FF"
-            android:textStyle="bold"/>
+            android:text="OFFLINE MESH"
+            android:textColor="#00FF87"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:background="#1A2638"
+            android:padding="6dp"/>
 
     </LinearLayout>
 
+    <!-- Background Router Card -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#21262D"
+        android:background="#162032"
         android:orientation="horizontal"
-        android:padding="14dp"
-        android:layout_margin="10dp"
+        android:padding="16dp"
+        android:layout_margin="14dp"
         android:gravity="center_vertical">
 
         <LinearLayout
@@ -41,9 +55,9 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="🌐 Background Relay Router"
+                android:text="⚡ Background Relay Router"
                 android:textColor="#FFFFFF"
-                android:textSize="14sp"
+                android:textSize="15sp"
                 android:textStyle="bold"/>
 
             <TextView
@@ -52,60 +66,71 @@
                 android:layout_height="wrap_content"
                 android:text="Router Mode: OFF"
                 android:textColor="#8B949E"
-                android:textSize="11sp"/>
+                android:textSize="12sp"
+                android:paddingTop="2dp"/>
         </LinearLayout>
 
         <Switch
             android:id="@+id/switch_router"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
+            android:layout_height="48dp"
+            android:minWidth="48dp"
+            android:minHeight="48dp"
+            android:padding="8dp"/>
 
     </LinearLayout>
 
+    <!-- Status Banner -->
     <TextView
         android:id="@+id/tv_status"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Ready | तैयार है"
-        android:textColor="#8B949E"
+        android:text="Status: Ready to Discover"
+        android:textColor="#00F2FE"
         android:gravity="center"
-        android:padding="6dp"
-        android:textSize="13sp"/>
+        android:padding="8dp"
+        android:textSize="13sp"
+        android:textStyle="italic"/>
 
+    <!-- Section Label -->
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Nearby Devices | आस-पास के डिवाइस"
-        android:textColor="#58A6FF"
-        android:gravity="center"
-        android:paddingTop="4dp"
-        android:textSize="12sp"
+        android:text="AVAILABLE PEERS &amp; NODES"
+        android:textColor="#4FACFE"
+        android:paddingStart="16dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="4dp"
+        android:textSize="11sp"
         android:textStyle="bold"/>
 
+    <!-- List View -->
     <ListView
         android:id="@+id/list_peers"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:background="#0D1117"
-        android:divider="#21262D"
+        android:background="#0A0E17"
+        android:divider="#1F293D"
         android:dividerHeight="1dp"/>
 
+    <!-- Search Button Bar -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:gravity="center"
-        android:padding="14dp"
-        android:background="#161B22">
+        android:padding="16dp"
+        android:background="#121824">
 
         <Button
             android:id="@+id/btn_discover"
-            android:layout_width="200dp"
-            android:layout_height="48dp"
-            android:text="🔍 Search | खोजें"
+            android:layout_width="220dp"
+            android:layout_height="52dp"
+            android:text="🔍 SEARCH PEERS"
             android:textSize="15sp"
-            android:backgroundTint="#238636"
-            android:textColor="#FFFFFF"/>
+            android:textStyle="bold"
+            android:backgroundTint="#00F2FE"
+            android:textColor="#0A0E17"/>
 
     </LinearLayout>
 

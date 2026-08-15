@@ -4,8 +4,12 @@ import android.content.Context;
 import android.net.wifi.p2p.WifiP2pConfig;
 import android.net.wifi.p2p.WifiP2pDevice;
 import android.net.wifi.p2p.WifiP2pManager;
+import android.net.wifi.p2p.nsd.WifiP2pDnsSdServiceInfo;
+import android.net.wifi.p2p.nsd.WifiP2pDnsSdServiceRequest;
 import android.net.wifi.WpsInfo;
 import android.util.Log;
+import java.util.HashMap;
+import java.util.Map;
 
 public class WiFiDirectManager {
 
@@ -19,10 +23,36 @@ public class WiFiDirectManager {
         Log.d(TAG, "WiFi Direct Ready!");
     }
 
-    public void discoverPeers() {
+    // Broadcast Real User Profile Name to Nearby Devices
+    public void startLocalProfileService(String userProfileName) {
         if (manager == null || channel == null) return;
 
-        // Pehle purani memory clear karo taaki re-connect ho sake
+        Map<String, String> record = new HashMap<>();
+        record.put("user_profile_name", userProfileName);
+
+        WifiP2pDnsSdServiceInfo serviceInfo = WifiP2pDnsSdServiceInfo.newInstance("MeshChatProfile", "_presence._tcp", record);
+
+        try {
+            manager.clearLocalServices(channel, new WifiP2pManager.ActionListener() {
+                @Override
+                public void onSuccess() {
+                    manager.addLocalService(channel, serviceInfo, new WifiP2pManager.ActionListener() {
+                        @Override
+                        public void onSuccess() {
+                            Log.d(TAG, "Profile Service Broadcasted: " + userProfileName);
+                        }
+                        @Override
+                        public void onFailure(int reason) {}
+                    });
+                }
+                @Override
+                public void onFailure(int reason) {}
+            });
+        } catch (SecurityException ignored) {}
+    }
+
+    public void discoverPeers() {
+        if (manager == null || channel == null) return;
         disconnect();
 
         try {
@@ -78,20 +108,8 @@ public class WiFiDirectManager {
         manager.requestConnectionInfo(channel, listener);
     }
 
-    // Forcefully Purane Connections Remove Karein
     public void disconnect() {
         if (manager == null || channel == null) return;
-
-        manager.removeGroup(channel, new WifiP2pManager.ActionListener() {
-            @Override
-            public void onSuccess() {
-                Log.d(TAG, "Group removed / Memory cleared!");
-            }
-
-            @Override
-            public void onFailure(int reason) {
-                Log.d(TAG, "No active group to remove.");
-            }
-        });
+        manager.removeGroup(channel, null);
     }
 }

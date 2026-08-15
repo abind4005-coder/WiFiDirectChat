@@ -1,3 +1,4 @@
 <resources>
-    <string name="app_name">WiFiDirectChat</string>
+    <string name="app_name">DMS</string>
+    <string name="pref_profile_name">pref_profile_name</string>
 </resources>

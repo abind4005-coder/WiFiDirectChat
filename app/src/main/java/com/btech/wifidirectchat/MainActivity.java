@@ -5,7 +5,9 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.LocationManager;
 import android.net.wifi.WifiManager;
 import android.net.wifi.p2p.WifiP2pDevice;
@@ -15,18 +17,26 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.Settings;
+import android.text.InputType;
+import android.view.View;
+import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -47,6 +57,8 @@ public class MainActivity extends AppCompatActivity {
 
     private static final int PERMISSION_CODE = 100;
     private boolean isDialogShowing = false;
+    private Animation pulseAnim;
+    private String userProfileName = "User";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,6 +71,10 @@ public class MainActivity extends AppCompatActivity {
         tvRouterStatus  = findViewById(R.id.tv_router_status);
         switchRouter    = findViewById(R.id.switch_router);
 
+        pulseAnim = AnimationUtils.loadAnimation(this, R.anim.pulse);
+
+        checkAndPromptUniqueUserProfile();
+
         wifiManager = new WiFiDirectManager(this);
 
         p2pManager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
@@ -66,7 +82,18 @@ public class MainActivity extends AppCompatActivity {
             channel = p2pManager.initialize(this, getMainLooper(), null);
         }
 
-        adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, deviceNames);
+        adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, deviceNames) {
+            @NonNull
+            @Override
+            public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+                View view = super.getView(position, convertView, parent);
+                TextView textView = view.findViewById(android.R.id.text1);
+                textView.setTextColor(Color.parseColor("#00F2FE"));
+                textView.setTextSize(15);
+                textView.setPadding(12, 12, 12, 12);
+                return view;
+            }
+        };
         listPeers.setAdapter(adapter);
 
         intentFilter = new IntentFilter();
@@ -78,7 +105,7 @@ public class MainActivity extends AppCompatActivity {
             Intent serviceIntent = new Intent(this, BackgroundRouterService.class);
             if (isChecked) {
                 tvRouterStatus.setText("Router Mode: 🟢 ACTIVE (Relay Bridge)");
-                tvRouterStatus.setTextColor(0xFF3FB950);
+                tvRouterStatus.setTextColor(0xFF00FF87);
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     startForegroundService(serviceIntent);
                 } else {
@@ -106,25 +133,63 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
 
-            tvStatus.setText("Dhoondh raha hoon... / Searching...");
+            btnDiscover.startAnimation(pulseAnim);
+            tvStatus.setText("🔍 Scanning for nearby P2P peers...");
             checkPermissionAndDiscover();
         });
 
         listPeers.setOnItemClickListener((parent, view, position, id) -> {
             if (position < peers.size()) {
                 WifiP2pDevice device = peers.get(position);
+                String displayName = deviceNames.get(position);
 
                 new AlertDialog.Builder(this)
                         .setTitle("Connect Confirmation")
-                        .setMessage("Kya aap " + device.deviceName + " se connect hona chahte hain?")
+                        .setMessage("Kya aap " + displayName + " se connect hona chahte hain?")
                         .setPositiveButton("Connect", (dialog, which) -> {
                             wifiManager.connect(device);
-                            tvStatus.setText("Connection request sent to: " + device.deviceName);
+                            tvStatus.setText("Connection request sent to: " + displayName);
                         })
                         .setNegativeButton("Cancel", null)
                         .show();
             }
         });
+    }
+
+    private void checkAndPromptUniqueUserProfile() {
+        SharedPreferences prefs = getSharedPreferences("UserProfile", MODE_PRIVATE);
+        userProfileName = prefs.getString("username", null);
+
+        // One-time prompt: Once set, Profile Name is LOCKED
+        if (userProfileName == null) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("👤 Create Unique Profile (One-Time Lock)");
+            builder.setMessage("Apna Unique Profile Name set karein. Note: Yeh ek baar set hone ke baad dobara change nahi hoga!");
+
+            final EditText input = new EditText(this);
+            input.setInputType(InputType.TYPE_CLASS_TEXT);
+            input.setHint("Unique Name (e.g. Rahul)");
+            builder.setView(input);
+
+            builder.setPositiveButton("Create & Lock Profile", (dialog, which) -> {
+                String rawName = input.getText().toString().trim();
+                if (!rawName.isEmpty()) {
+                    // Generate Unique Tag: e.g. Rahul#4891
+                    int randomTag = 1000 + new Random().nextInt(9000);
+                    userProfileName = rawName + "#" + randomTag;
+
+                    // Lock permanently in SharedPreferences
+                    prefs.edit().putString("username", userProfileName).apply();
+                    Toast.makeText(MainActivity.this, "Profile Unique Locked: " + userProfileName, Toast.LENGTH_LONG).show();
+                } else {
+                    int randomTag = 1000 + new Random().nextInt(9000);
+                    userProfileName = "User_" + Build.MODEL + "#" + randomTag;
+                    prefs.edit().putString("username", userProfileName).apply();
+                }
+            });
+            builder.setCancelable(false);
+            builder.show();
+        }
     }
 
     private boolean isLocationEnabled() {
@@ -153,12 +218,14 @@ public class MainActivity extends AppCompatActivity {
 
     public void updatePeerList() {
         wifiManager.getPeers(peerList -> {
+            btnDiscover.clearAnimation();
             if (peerList != null && peerList.getDeviceList() != null) {
                 peers.clear();
                 deviceNames.clear();
                 peers.addAll(peerList.getDeviceList());
                 for (WifiP2pDevice device : peers) {
-                    deviceNames.add("📱 " + device.deviceName);
+                    String nameToDisplay = (device.deviceName != null && !device.deviceName.isEmpty()) ? device.deviceName : "Nearby User";
+                    deviceNames.add("👤 " + nameToDisplay + " 🟢 [Strong]");
                 }
                 adapter.notifyDataSetChanged();
                 if (peers.isEmpty()) {
@@ -199,7 +266,7 @@ public class MainActivity extends AppCompatActivity {
                                 Intent intent = new Intent(MainActivity.this, ChatActivity.class);
                                 intent.putExtra("groupOwnerIP", ownerIP);
                                 intent.putExtra("isGroupOwner", info.isGroupOwner);
-                                intent.putExtra("peerName", "Peer Device");
+                                intent.putExtra("peerName", userProfileName);
                                 startActivity(intent);
                             } catch (Exception e) {
                                 Toast.makeText(MainActivity.this, "Error starting chat: " + e.getMessage(), Toast.LENGTH_SHORT).show();

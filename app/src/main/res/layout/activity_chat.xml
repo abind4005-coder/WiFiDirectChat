@@ -1,84 +1,117 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="#0D1117">
+    android:background="#0A0E17"
+    android:fitsSystemWindows="true">
 
-    <!-- Header Bar -->
+    <!-- Top Header Bar -->
     <LinearLayout
+        android:id="@+id/header_bar"
         android:layout_width="match_parent"
-        android:layout_height="56dp"
-        android:background="#161B22"
+        android:layout_height="60dp"
+        android:background="#121824"
         android:gravity="center_vertical"
-        android:padding="12dp">
+        android:padding="12dp"
+        android:layout_alignParentTop="true">
 
         <TextView
             android:id="@+id/tv_peer_name"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_width="166dp"
+            android:layout_height="27dp"
             android:layout_weight="1"
-            android:text="Device Name"
-            android:textColor="#58A6FF"
+            android:text="Peer Device"
+            android:textColor="#00F2FE"
             android:textSize="18sp"
-            android:textStyle="bold"/>
+            android:textStyle="bold" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="🔐 AES-256 Encrypted"
-            android:textColor="#3FB950"
-            android:textSize="12sp"
-            android:textStyle="bold"/>
+            android:text="🔒 AES-256 MESH"
+            android:textColor="#00FF87"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:background="#1A2638"
+            android:padding="6dp"/>
 
     </LinearLayout>
 
-    <!-- Messages List with High Visibility Divider -->
-    <ListView
-        android:id="@+id/list_messages"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:background="#0D1117"
-        android:divider="#30363D"
-        android:dividerHeight="1dp"
-        android:stackFromBottom="true"
-        android:transcriptMode="alwaysScroll"/>
-
-    <!-- Bottom Input Box -->
+    <!-- Bottom Input Controls with Fixed 48dp Touch Sizes -->
     <LinearLayout
+        android:id="@+id/input_container"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#161B22"
+        android:background="#121824"
         android:padding="8dp"
         android:orientation="horizontal"
-        android:gravity="center_vertical">
+        android:gravity="center_vertical"
+        android:layout_alignParentBottom="true">
+
+        <Button
+            android:id="@+id/btn_attach_file"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:minHeight="48dp"
+            android:layout_marginEnd="4dp"
+            android:text="📁 FILE"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:backgroundTint="#1F293D"
+            android:textColor="#00F2FE"/>
+
+        <Button
+            android:id="@+id/btn_record_audio"
+            android:layout_width="76dp"
+            android:layout_height="50dp"
+            android:layout_marginEnd="4dp"
+            android:backgroundTint="#1F293D"
+            android:minHeight="48dp"
+            android:text="🎙️ REC"
+            android:textColor="#FF5555"
+            android:textSize="12sp"
+            android:textStyle="bold" />
 
         <EditText
             android:id="@+id/et_message"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:hint="Message likhein / Type message..."
+            android:minHeight="48dp"
+            android:hint="Type message..."
             android:textColor="#FFFFFF"
             android:textColorHint="#8B949E"
-            android:padding="12dp"
-            android:textSize="15sp"
+            android:padding="10dp"
+            android:textSize="14sp"
             android:maxLines="4"
             android:inputType="textMultiLine"
-            android:background="#21262D"/>
+            android:background="#162032"/>
 
         <Button
             android:id="@+id/btn_send"
-            android:layout_width="60dp"
+            android:layout_width="54dp"
             android:layout_height="48dp"
-            android:layout_marginStart="8dp"
+            android:minHeight="48dp"
+            android:layout_marginStart="4dp"
             android:text="➤"
             android:textSize="18sp"
-            android:backgroundTint="#238636"
-            android:textColor="#FFFFFF"/>
+            android:backgroundTint="#00F2FE"
+            android:textColor="#0A0E17"/>
 
     </LinearLayout>
 
-</LinearLayout>
+    <!-- Messages List Fitted Between Header and Input Bar -->
+    <ListView
+        android:id="@+id/list_messages"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/header_bar"
+        android:layout_above="@id/input_container"
+        android:background="#0A0E17"
+        android:divider="#1F293D"
+        android:dividerHeight="1dp"
+        android:stackFromBottom="true"
+        android:transcriptMode="alwaysScroll"/>
+
+</RelativeLayout>
