@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "396336505386",
+    "project_id": "dms-meshnet",
+    "storage_bucket": "dms-meshnet.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:396336505386:android:0d9f49176eacbe5d6d5953",
+        "android_client_info": {
+          "package_name": "com.btech.wifidirectchat"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAvblJ5ASldK6-BuyBJV0qQlbT9zKDJ47E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

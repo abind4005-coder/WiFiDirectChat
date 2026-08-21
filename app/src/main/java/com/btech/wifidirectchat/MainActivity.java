@@ -34,63 +34,80 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import com.google.firebase.analytics.FirebaseAnalytics;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
 
-    private Button btnDiscover;
+    private Button   btnDiscover;
     private ListView listPeers;
     private TextView tvStatus, tvRouterStatus;
-    private Switch switchRouter;
+    private Switch   switchRouter;
 
-    private WiFiDirectManager wifiManager;
-    private WifiP2pManager p2pManager;
+    private WiFiDirectManager    wifiManager;
+    private WifiP2pManager       p2pManager;
     private WifiP2pManager.Channel channel;
-    private BroadcastReceiver receiver;
-    private IntentFilter intentFilter;
+    private BroadcastReceiver    receiver;
+    private IntentFilter         intentFilter;
 
-    private List<WifiP2pDevice> peers = new ArrayList<>();
-    private ArrayAdapter<String> adapter;
-    private List<String> deviceNames = new ArrayList<>();
+    private final List<WifiP2pDevice> peers       = new ArrayList<>();
+    private       ArrayAdapter<String> adapter;
+    private final List<String>        deviceNames = new ArrayList<>();
 
     private static final int PERMISSION_CODE = 100;
-    private boolean isDialogShowing = false;
+    private boolean  isDialogShowing = false;
     private Animation pulseAnim;
-    private String userProfileName = "User";
+    private String   userProfileName = "User";
+
+    // Firebase
+    private FirebaseAnalytics  firebaseAnalytics;
+    private DatabaseReference  dbReference;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        btnDiscover     = findViewById(R.id.btn_discover);
-        listPeers       = findViewById(R.id.list_peers);
-        tvStatus        = findViewById(R.id.tv_status);
-        tvRouterStatus  = findViewById(R.id.tv_router_status);
-        switchRouter    = findViewById(R.id.switch_router);
+        // Firebase Initialize
+        firebaseAnalytics = FirebaseAnalytics.getInstance(this);
+        dbReference = FirebaseDatabase.getInstance().getReference("DMS_Users");
+
+        btnDiscover    = findViewById(R.id.btn_discover);
+        listPeers      = findViewById(R.id.list_peers);
+        tvStatus       = findViewById(R.id.tv_status);
+        tvRouterStatus = findViewById(R.id.tv_router_status);
+        switchRouter   = findViewById(R.id.switch_router);
 
         pulseAnim = AnimationUtils.loadAnimation(this, R.anim.pulse);
 
         checkAndPromptUniqueUserProfile();
 
         wifiManager = new WiFiDirectManager(this);
-
-        p2pManager = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
+        p2pManager  = (WifiP2pManager) getSystemService(Context.WIFI_P2P_SERVICE);
         if (p2pManager != null) {
             channel = p2pManager.initialize(this, getMainLooper(), null);
         }
 
-        adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, deviceNames) {
+        adapter = new ArrayAdapter<String>(this,
+                android.R.layout.simple_list_item_1, deviceNames) {
             @NonNull
             @Override
-            public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+            public View getView(int position, @Nullable View convertView,
+                                @NonNull ViewGroup parent) {
                 View view = super.getView(position, convertView, parent);
-                TextView textView = view.findViewById(android.R.id.text1);
-                textView.setTextColor(Color.parseColor("#00F2FE"));
-                textView.setTextSize(15);
-                textView.setPadding(12, 12, 12, 12);
+                TextView tv = view.findViewById(android.R.id.text1);
+                tv.setTextColor(Color.parseColor("#00F2FE"));
+                tv.setTextSize(15);
+                tv.setPadding(12, 12, 12, 12);
                 return view;
             }
         };
@@ -104,51 +121,47 @@ public class MainActivity extends AppCompatActivity {
         switchRouter.setOnCheckedChangeListener((buttonView, isChecked) -> {
             Intent serviceIntent = new Intent(this, BackgroundRouterService.class);
             if (isChecked) {
-                tvRouterStatus.setText("Router Mode: 🟢 ACTIVE (Relay Bridge)");
+                tvRouterStatus.setText("Router Mode: 🟢 ACTIVE");
                 tvRouterStatus.setTextColor(0xFF00FF87);
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     startForegroundService(serviceIntent);
                 } else {
                     startService(serviceIntent);
                 }
-                Toast.makeText(this, "Router Mode Enabled! Background Relay Active.", Toast.LENGTH_SHORT).show();
             } else {
                 tvRouterStatus.setText("Router Mode: OFF");
                 tvRouterStatus.setTextColor(0xFF8B949E);
                 stopService(serviceIntent);
-                Toast.makeText(this, "Router Mode Disabled.", Toast.LENGTH_SHORT).show();
             }
         });
 
         btnDiscover.setOnClickListener(v -> {
-            WifiManager wm = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
+            WifiManager wm = (WifiManager)
+                    getApplicationContext().getSystemService(WIFI_SERVICE);
             if (wm != null && !wm.isWifiEnabled()) {
                 Toast.makeText(this, "WiFi ON karo pehle!", Toast.LENGTH_LONG).show();
                 return;
             }
-
             if (!isLocationEnabled()) {
-                Toast.makeText(this, "Location ON karo Settings me!", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "Location ON karo!", Toast.LENGTH_LONG).show();
                 startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
                 return;
             }
-
             btnDiscover.startAnimation(pulseAnim);
-            tvStatus.setText("🔍 Scanning for nearby P2P peers...");
+            tvStatus.setText("🔍 Scanning for peers...");
             checkPermissionAndDiscover();
         });
 
         listPeers.setOnItemClickListener((parent, view, position, id) -> {
             if (position < peers.size()) {
-                WifiP2pDevice device = peers.get(position);
-                String displayName = deviceNames.get(position);
-
+                WifiP2pDevice device      = peers.get(position);
+                String        displayName = deviceNames.get(position);
                 new AlertDialog.Builder(this)
                         .setTitle("Connect Confirmation")
                         .setMessage("Kya aap " + displayName + " se connect hona chahte hain?")
                         .setPositiveButton("Connect", (dialog, which) -> {
                             wifiManager.connect(device);
-                            tvStatus.setText("Connection request sent to: " + displayName);
+                            tvStatus.setText("Connecting to: " + displayName);
                         })
                         .setNegativeButton("Cancel", null)
                         .show();
@@ -156,39 +169,97 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    // ─── Unique Profile Setup ──────────────────────────────────────
     private void checkAndPromptUniqueUserProfile() {
         SharedPreferences prefs = getSharedPreferences("UserProfile", MODE_PRIVATE);
         userProfileName = prefs.getString("username", null);
 
-        // One-time prompt: Once set, Profile Name is LOCKED
         if (userProfileName == null) {
             AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle("👤 Create Unique Profile (One-Time Lock)");
-            builder.setMessage("Apna Unique Profile Name set karein. Note: Yeh ek baar set hone ke baad dobara change nahi hoga!");
+            builder.setTitle("👤 Create Unique Profile");
+            builder.setMessage("Apna naam set karein (ek baar set hone ke baad change nahi hoga):");
 
             final EditText input = new EditText(this);
             input.setInputType(InputType.TYPE_CLASS_TEXT);
-            input.setHint("Unique Name (e.g. Rahul)");
+            input.setHint("Aapka Naam");
             builder.setView(input);
 
-            builder.setPositiveButton("Create & Lock Profile", (dialog, which) -> {
-                String rawName = input.getText().toString().trim();
-                if (!rawName.isEmpty()) {
-                    // Generate Unique Tag: e.g. Rahul#4891
-                    int randomTag = 1000 + new Random().nextInt(9000);
-                    userProfileName = rawName + "#" + randomTag;
-
-                    // Lock permanently in SharedPreferences
-                    prefs.edit().putString("username", userProfileName).apply();
-                    Toast.makeText(MainActivity.this, "Profile Unique Locked: " + userProfileName, Toast.LENGTH_LONG).show();
+            builder.setPositiveButton("Save & Lock", (dialog, which) -> {
+                String raw = input.getText().toString().trim();
+                if (!raw.isEmpty()) {
+                    int randomTag   = 1000 + new Random().nextInt(9000);
+                    userProfileName = raw + "#" + randomTag;
                 } else {
-                    int randomTag = 1000 + new Random().nextInt(9000);
-                    userProfileName = "User_" + Build.MODEL + "#" + randomTag;
-                    prefs.edit().putString("username", userProfileName).apply();
+                    userProfileName = "User_" + Build.MODEL + "#"
+                            + (1000 + new Random().nextInt(9000));
                 }
+                prefs.edit().putString("username", userProfileName).apply();
+                Toast.makeText(this, "Profile Locked: " + userProfileName,
+                        Toast.LENGTH_LONG).show();
+
+                // ✅ Save to Firebase
+                saveUserToFirebase(userProfileName);
             });
             builder.setCancelable(false);
             builder.show();
+        } else {
+            // Already existing user — update last seen
+            updateLastSeen(userProfileName);
+        }
+    }
+
+    // ─── Firebase: Save New User ───────────────────────────────────
+    private void saveUserToFirebase(String profileName) {
+        try {
+            String userId  = profileName.replace("#", "_").replace(" ", "_");
+            String timeNow = new SimpleDateFormat(
+                    "dd-MM-yyyy HH:mm:ss", Locale.getDefault()).format(new Date());
+
+            Map<String, Object> userData = new HashMap<>();
+            userData.put("profileName",  profileName);
+            userData.put("deviceModel",  Build.MODEL);
+            userData.put("deviceBrand",  Build.BRAND);
+            userData.put("androidVersion", Build.VERSION.RELEASE);
+            userData.put("firstSeen",    timeNow);
+            userData.put("lastSeen",     timeNow);
+            userData.put("appVersion",   "1.0");
+            userData.put("status",       "Active");
+
+            dbReference.child(userId).setValue(userData)
+                    .addOnSuccessListener(unused ->
+                            Toast.makeText(this, "Profile Registered! ✅", Toast.LENGTH_SHORT).show())
+                    .addOnFailureListener(e -> {
+                        // Offline hai to ignore karein
+                    });
+
+            // Firebase Analytics Event
+            android.os.Bundle bundle = new android.os.Bundle();
+            bundle.putString("profile_name", profileName);
+            bundle.putString("device_model", Build.MODEL);
+            firebaseAnalytics.logEvent("new_user_registered", bundle);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    // ─── Firebase: Update Last Seen ────────────────────────────────
+    private void updateLastSeen(String profileName) {
+        try {
+            String userId  = profileName.replace("#", "_").replace(" ", "_");
+            String timeNow = new SimpleDateFormat(
+                    "dd-MM-yyyy HH:mm:ss", Locale.getDefault()).format(new Date());
+
+            dbReference.child(userId).child("lastSeen").setValue(timeNow);
+            dbReference.child(userId).child("status").setValue("Active");
+
+            // Analytics: App Opened Event
+            android.os.Bundle bundle = new android.os.Bundle();
+            bundle.putString("profile_name", profileName);
+            firebaseAnalytics.logEvent("app_opened", bundle);
+
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -201,17 +272,25 @@ public class MainActivity extends AppCompatActivity {
 
     private void checkPermissionAndDiscover() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.NEARBY_WIFI_DEVICES) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.NEARBY_WIFI_DEVICES, Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSION_CODE);
+            if (ActivityCompat.checkSelfPermission(this,
+                    Manifest.permission.NEARBY_WIFI_DEVICES)
+                    != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.NEARBY_WIFI_DEVICES,
+                                Manifest.permission.ACCESS_FINE_LOCATION},
+                        PERMISSION_CODE);
                 return;
             }
         } else {
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSION_CODE);
+            if (ActivityCompat.checkSelfPermission(this,
+                    Manifest.permission.ACCESS_FINE_LOCATION)
+                    != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                        PERMISSION_CODE);
                 return;
             }
         }
-
         wifiManager.discoverPeers();
         new Handler(Looper.getMainLooper()).postDelayed(this::updatePeerList, 3000);
     }
@@ -224,67 +303,54 @@ public class MainActivity extends AppCompatActivity {
                 deviceNames.clear();
                 peers.addAll(peerList.getDeviceList());
                 for (WifiP2pDevice device : peers) {
-                    String nameToDisplay = (device.deviceName != null && !device.deviceName.isEmpty()) ? device.deviceName : "Nearby User";
-                    deviceNames.add("👤 " + nameToDisplay + " 🟢 [Strong]");
+                    String name = (device.deviceName != null
+                            && !device.deviceName.isEmpty())
+                            ? device.deviceName : "Nearby User";
+                    deviceNames.add("👤 " + name + " 🟢 [Strong]");
                 }
                 adapter.notifyDataSetChanged();
-                if (peers.isEmpty()) {
-                    tvStatus.setText("No devices found");
-                } else {
-                    tvStatus.setText(peers.size() + " device(s) found!");
-                }
+                tvStatus.setText(peers.isEmpty()
+                        ? "No devices found"
+                        : peers.size() + " device(s) found!");
             }
         });
     }
 
-    public void onWifiDirectEnabled() {
-        tvStatus.setText("WiFi Direct Ready! ✅");
-    }
-
-    public void onWifiDirectDisabled() {
-        tvStatus.setText("WiFi Direct OFF! ❌");
-    }
+    public void onWifiDirectEnabled()  { tvStatus.setText("WiFi Direct Ready! ✅"); }
+    public void onWifiDirectDisabled() { tvStatus.setText("WiFi Direct OFF! ❌"); }
 
     public void onDeviceConnected() {
         if (isDialogShowing) return;
-
         wifiManager.getInfo(info -> {
             if (info != null && info.groupFormed) {
                 isDialogShowing = true;
-
-                String ownerIP = (info.groupOwnerAddress != null) ? info.groupOwnerAddress.getHostAddress() : "192.168.49.1";
+                String ownerIP = (info.groupOwnerAddress != null)
+                        ? info.groupOwnerAddress.getHostAddress() : "192.168.49.1";
 
                 new AlertDialog.Builder(MainActivity.this)
                         .setTitle("📲 Connection Request")
-                        .setMessage("Dusra device aapke sath connect hona chahta hai. Kya aap Accept karte hain?")
+                        .setMessage("Ek device connect hona chahta hai. Accept karein?")
                         .setCancelable(false)
                         .setPositiveButton("ACCEPT", (dialog, which) -> {
                             isDialogShowing = false;
                             tvStatus.setText("Connected! ✅");
-
-                            try {
-                                Intent intent = new Intent(MainActivity.this, ChatActivity.class);
-                                intent.putExtra("groupOwnerIP", ownerIP);
-                                intent.putExtra("isGroupOwner", info.isGroupOwner);
-                                intent.putExtra("peerName", userProfileName);
-                                startActivity(intent);
-                            } catch (Exception e) {
-                                Toast.makeText(MainActivity.this, "Error starting chat: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                            }
+                            Intent intent = new Intent(MainActivity.this, ChatActivity.class);
+                            intent.putExtra("groupOwnerIP",  ownerIP);
+                            intent.putExtra("isGroupOwner",  info.isGroupOwner);
+                            intent.putExtra("peerName",      userProfileName);
+                            startActivity(intent);
                         })
                         .setNegativeButton("DECLINE", (dialog, which) -> {
                             isDialogShowing = false;
                             wifiManager.disconnect();
-                            tvStatus.setText("Connection Declined ❌");
+                            tvStatus.setText("Declined ❌");
                         })
                         .show();
             }
         });
     }
 
-    public void onDeviceDisconnected() {
-        tvStatus.setText("Disconnected");
-    }
+    public void onDeviceDisconnected() { tvStatus.setText("Disconnected"); }
 
     @Override
     protected void onResume() {
@@ -300,10 +366,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         super.onPause();
-        if (receiver != null) {
-            try {
-                unregisterReceiver(receiver);
-            } catch (Exception ignored) {}
-        }
+        try { unregisterReceiver(receiver); } catch (Exception ignored) {}
     }
 }
