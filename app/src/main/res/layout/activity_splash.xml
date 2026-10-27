@@ -2,58 +2,55 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#000000"
-    android:gravity="center">
+    android:background="#000000">
 
-    <!-- Background Glow Circle (Big) -->
+    <!-- Outer Glow Circle -->
     <View
         android:id="@+id/glow_outer"
-        android:layout_width="320dp"
-        android:layout_height="320dp"
+        android:layout_width="300dp"
+        android:layout_height="300dp"
         android:layout_centerInParent="true"
         android:background="@drawable/glow_circle_outer" />
 
-    <!-- Background Glow Circle (Small) -->
+    <!-- Inner Glow Circle -->
     <View
         android:id="@+id/glow_inner"
-        android:layout_width="200dp"
-        android:layout_height="200dp"
+        android:layout_width="190dp"
+        android:layout_height="190dp"
         android:layout_centerInParent="true"
         android:background="@drawable/glow_circle_inner" />
 
-    <!-- Main Logo Circle -->
+    <!-- Logo Circle Container -->
     <LinearLayout
         android:id="@+id/logo_container"
-        android:layout_width="130dp"
-        android:layout_height="130dp"
+        android:layout_width="120dp"
+        android:layout_height="120dp"
         android:layout_centerInParent="true"
         android:background="@drawable/logo_bg"
         android:gravity="center"
         android:orientation="vertical">
 
-        <!-- Signal/WiFi Icon Text -->
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="📡"
-            android:textSize="48sp" />
+            android:textSize="44sp" />
 
     </LinearLayout>
 
-    <!-- App Name -->
+    <!-- App Name: DMS -->
     <TextView
         android:id="@+id/tv_app_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:layout_below="@id/logo_container"
-        android:layout_marginTop="32dp"
+        android:layout_marginTop="28dp"
         android:text="DMS"
         android:textColor="#00F2FE"
-        android:textSize="52sp"
+        android:textSize="50sp"
         android:textStyle="bold"
-        android:letterSpacing="0.3"
-        android:fontFamily="sans-serif-black" />
+        android:letterSpacing="0.3" />
 
     <!-- Tagline -->
     <TextView
@@ -62,72 +59,45 @@
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:layout_below="@id/tv_app_name"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="6dp"
         android:text="Decentralized Mesh System"
         android:textColor="#8B949E"
-        android:textSize="14sp"
-        android:letterSpacing="0.15" />
+        android:textSize="13sp" />
 
-    <!-- Status Text (Animated) -->
+    <!-- Status Message -->
     <TextView
         android:id="@+id/tv_status"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:layout_below="@id/tv_tagline"
-        android:layout_marginTop="60dp"
+        android:layout_marginTop="56dp"
         android:text="Initializing secure channel..."
         android:textColor="#00FF87"
-        android:textSize="13sp" />
+        android:textSize="12sp" />
 
     <!-- Progress Bar -->
     <ProgressBar
         android:id="@+id/progress_bar"
         style="@style/Widget.AppCompat.ProgressBar.Horizontal"
-        android:layout_width="220dp"
+        android:layout_width="200dp"
         android:layout_height="4dp"
         android:layout_centerHorizontal="true"
         android:layout_below="@id/tv_status"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="14dp"
         android:progressDrawable="@drawable/progress_custom"
         android:progress="0"
         android:max="100" />
 
-    <!-- Version -->
+    <!-- Version Text -->
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:layout_alignParentBottom="true"
-        android:layout_marginBottom="32dp"
-        android:text="v1.0 | Buddha Institute of Technology"
-        android:textColor="#30FFFFFF"
-        android:textSize="11sp" />
-
-    <!-- 3 Bottom Dots (Decorative) -->
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_alignParentBottom="true"
-        android:layout_marginBottom="70dp"
-        android:orientation="horizontal">
-
-        <View
-            android:layout_width="6dp"
-            android:layout_height="6dp"
-            android:layout_margin="4dp"
-            android:background="@drawable/dot_active" />
-        <View
-            android:layout_width="6dp"
-            android:layout_height="6dp"
-            android:layout_margin="4dp"
-            android:background="@drawable/dot_inactive" />
-        <View
-            android:layout_width="6dp"
-            android:layout_height="6dp"
-            android:layout_margin="4dp"
-            android:background="@drawable/dot_inactive" />
-    </LinearLayout>
+        android:layout_marginBottom="28dp"
+        android:text="v1.0  |  Buddha Institute of Technology"
+        android:textColor="#33FFFFFF"
+        android:textSize="10sp" />
 
 </RelativeLayout>
