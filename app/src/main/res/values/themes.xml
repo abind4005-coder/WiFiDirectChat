@@ -4,10 +4,14 @@
     <style name="Base.Theme.WiFiDirectChat" parent="Theme.Material3.DayNight.NoActionBar">
     </style>
 
-    <!-- Main App Theme -->
-    <style name="Theme.WiFiDirectChat" parent="Base.Theme.WiFiDirectChat" />
+    <!-- Main App Theme (Normal status bar, visible clock & battery) -->
+    <style name="Theme.WiFiDirectChat" parent="Base.Theme.WiFiDirectChat">
+        <item name="android:statusBarColor">#121824</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:navigationBarColor">#0A0E17</item>
+    </style>
 
-    <!-- Splash Screen Theme -->
+    <!-- Splash Screen Theme (Fullscreen only during 3-second splash intro) -->
     <style name="Theme.WiFiDirectChat.NoActionBar" parent="Base.Theme.WiFiDirectChat">
         <item name="android:windowFullscreen">true</item>
         <item name="android:statusBarColor">#000000</item>

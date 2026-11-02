@@ -36,6 +36,16 @@ public class CallActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_call);
 
+        getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
+        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.call_root), (v, insets) -> {
+            androidx.core.graphics.Insets systemBars = insets.getInsets(
+                    androidx.core.view.WindowInsetsCompat.Type.systemBars()
+            );
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            return insets;
+        });
+
         isCaller = getIntent().getBooleanExtra("isCaller", true);
         peerName = getIntent().getStringExtra("peerName");
         peerIP   = getIntent().getStringExtra("peerIP");

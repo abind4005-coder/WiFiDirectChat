@@ -78,6 +78,17 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Normal screen layout (Fix: ensures status bar, clock, notch and battery never cut into content)
+        getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
+        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main_root), (v, insets) -> {
+            androidx.core.graphics.Insets systemBars = insets.getInsets(
+                    androidx.core.view.WindowInsetsCompat.Type.systemBars()
+            );
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            return insets;
+        });
+
         // Firebase Initialize
         firebaseAnalytics = FirebaseAnalytics.getInstance(this);
         dbReference = FirebaseDatabase.getInstance().getReference("DMS_Users");
