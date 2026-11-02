@@ -47,6 +47,13 @@
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
 
+        <!-- Voice Call Screen -->
+        <activity
+            android:name=".CallActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.WiFiDirectChat.NoActionBar" />
+
         <service
             android:name=".BackgroundRouterService"
             android:exported="false"

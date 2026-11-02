@@ -17,16 +17,6 @@
         android:layout_alignParentTop="true">
 
         <TextView
-            android:id="@+id/tv_peer_name"
-            android:layout_width="166dp"
-            android:layout_height="27dp"
-            android:layout_weight="1"
-            android:text="Peer Device"
-            android:textColor="#00F2FE"
-            android:textSize="18sp"
-            android:textStyle="bold" />
-
-        <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="🔒 AES-256 MESH"
@@ -112,6 +102,17 @@
         android:divider="#1F293D"
         android:dividerHeight="1dp"
         android:stackFromBottom="true"
-        android:transcriptMode="alwaysScroll"/>
+        android:transcriptMode="alwaysScroll">
+
+        <TextView
+            android:id="@+id/tv_peer_name"
+            android:layout_width="166dp"
+            android:layout_height="27dp"
+            android:layout_weight="1"
+            android:text="Peer Device"
+            android:textColor="#00F2FE"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+    </ListView>
 
 </RelativeLayout>

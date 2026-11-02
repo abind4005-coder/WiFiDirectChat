@@ -42,7 +42,7 @@ public class ChatActivity extends AppCompatActivity {
 
     private ListView listMessages;
     private EditText etMessage;
-    private Button   btnSend, btnAttachFile, btnRecordAudio;
+    private Button   btnSend, btnAttachFile, btnRecordAudio, btnVoiceCall;
     private TextView tvPeerName;
 
     private final List<String>          messages     = new ArrayList<>();
@@ -93,6 +93,7 @@ public class ChatActivity extends AppCompatActivity {
         btnSend        = findViewById(R.id.btn_send);
         btnAttachFile  = findViewById(R.id.btn_attach_file);
         btnRecordAudio = findViewById(R.id.btn_record_audio);
+        btnVoiceCall   = findViewById(R.id.btn_voice_call);
         tvPeerName     = findViewById(R.id.tv_peer_name);
 
         if (peerName != null) {
