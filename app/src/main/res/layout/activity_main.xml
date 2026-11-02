@@ -100,49 +100,51 @@
     </LinearLayout>
 
     <!-- ══ CENTER CIRCULAR RADAR SCANNING SECTION ══════════════════ -->
+    <!-- Takes full available space and centers the circular radar button vertically -->
     <LinearLayout
+        android:id="@+id/layout_radar_center"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:orientation="vertical"
         android:gravity="center"
-        android:paddingTop="18dp"
-        android:paddingBottom="14dp">
+        android:padding="16dp">
 
         <!-- Circular Radar Container -->
         <RelativeLayout
             android:id="@+id/radar_container"
-            android:layout_width="220dp"
-            android:layout_height="220dp"
+            android:layout_width="250dp"
+            android:layout_height="250dp"
             android:gravity="center">
 
             <!-- Outer Radar Glow Wave Ring -->
             <View
                 android:id="@+id/radar_ring_outer"
-                android:layout_width="210dp"
-                android:layout_height="210dp"
+                android:layout_width="240dp"
+                android:layout_height="240dp"
                 android:layout_centerInParent="true"
                 android:background="@drawable/glow_circle_outer" />
 
             <!-- Middle Radar Glow Wave Ring -->
             <View
                 android:id="@+id/radar_ring_inner"
-                android:layout_width="165dp"
-                android:layout_height="165dp"
+                android:layout_width="190dp"
+                android:layout_height="190dp"
                 android:layout_centerInParent="true"
                 android:background="@drawable/glow_circle_inner" />
 
-            <!-- CENTER CIRCULAR BUTTON -->
+            <!-- CENTER CIRCULAR BUTTON (Slightly larger: 145dp x 145dp) -->
             <androidx.appcompat.widget.AppCompatButton
                 android:id="@+id/btn_discover"
-                android:layout_width="125dp"
-                android:layout_height="125dp"
+                android:layout_width="145dp"
+                android:layout_height="145dp"
                 android:layout_centerInParent="true"
                 android:background="@drawable/circle_radar_button"
                 android:text="📡\nSCAN"
                 android:textColor="#00F2FE"
-                android:textSize="15sp"
+                android:textSize="16sp"
                 android:textStyle="bold"
-                android:lineSpacingExtra="2dp"
+                android:lineSpacingExtra="3dp"
                 android:gravity="center"
                 android:elevation="8dp"
                 android:stateListAnimator="@null" />
@@ -156,23 +158,27 @@
             android:layout_height="wrap_content"
             android:text="Tap Radar to Scan Nearby Nodes"
             android:textColor="#00FF87"
-            android:textSize="13sp"
+            android:textSize="14sp"
             android:textStyle="bold"
-            android:layout_marginTop="8dp" />
+            android:gravity="center"
+            android:layout_marginTop="14dp"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp" />
 
     </LinearLayout>
 
-    <!-- ══ AVAILABLE PEERS SECTION ═════════════════════════════════ -->
+    <!-- ══ AVAILABLE PEERS SECTION (HIDDEN initially, appears ONLY when peers are found!) ══ -->
     <LinearLayout
+        android:id="@+id/card_peers"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_height="230dp"
         android:orientation="vertical"
         android:background="@drawable/radar_card_bg"
         android:layout_marginStart="16dp"
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="16dp"
-        android:padding="12dp">
+        android:padding="12dp"
+        android:visibility="gone">
 
         <LinearLayout
             android:layout_width="match_parent"

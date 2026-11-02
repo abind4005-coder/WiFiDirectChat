@@ -51,7 +51,7 @@ public class MainActivity extends AppCompatActivity {
     private Button   btnDiscover;
     private ListView listPeers;
     private TextView tvStatus, tvRouterStatus, tvUserProfile, tvPeerCount;
-    private View     radarRingOuter, radarRingInner;
+    private View     radarRingOuter, radarRingInner, cardPeers;
     private Switch   switchRouter;
 
     private WiFiDirectManager    wifiManager;
@@ -102,6 +102,7 @@ public class MainActivity extends AppCompatActivity {
         tvPeerCount    = findViewById(R.id.tv_peer_count);
         radarRingOuter = findViewById(R.id.radar_ring_outer);
         radarRingInner = findViewById(R.id.radar_ring_inner);
+        cardPeers      = findViewById(R.id.card_peers);
 
         pulseAnim = AnimationUtils.loadAnimation(this, R.anim.pulse);
 
@@ -170,6 +171,7 @@ public class MainActivity extends AppCompatActivity {
             btnDiscover.setText("📡\nSCANNING");
             btnDiscover.startAnimation(pulseAnim);
             tvStatus.setText("🔍 Scanning for nearby peers...");
+            if (cardPeers != null) cardPeers.setVisibility(View.GONE);
             checkPermissionAndDiscover();
         });
 
@@ -342,9 +344,16 @@ public class MainActivity extends AppCompatActivity {
                 if (tvPeerCount != null) {
                     tvPeerCount.setText(peers.size() + " Found");
                 }
-                tvStatus.setText(peers.isEmpty()
-                        ? "No devices found. Tap radar to retry."
-                        : peers.size() + " device(s) found! Tap to connect");
+                if (!peers.isEmpty()) {
+                    if (cardPeers != null) cardPeers.setVisibility(View.VISIBLE);
+                    tvStatus.setText(peers.size() + " device(s) found! Tap to connect");
+                } else {
+                    if (cardPeers != null) cardPeers.setVisibility(View.GONE);
+                    tvStatus.setText("No devices found. Tap radar to retry.");
+                }
+            } else {
+                if (cardPeers != null) cardPeers.setVisibility(View.GONE);
+                tvStatus.setText("No devices found. Tap radar to retry.");
             }
         });
     }
