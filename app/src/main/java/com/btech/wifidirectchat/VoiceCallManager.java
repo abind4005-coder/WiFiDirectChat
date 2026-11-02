@@ -9,41 +9,39 @@ import android.util.Log;
 
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 
 /**
- * VoiceCallManager — Real-time 2-way voice call engine
- * Uses AudioRecord (mic capture) + AudioTrack (speaker play)
- * over TCP sockets for full-duplex communication.
+ * VoiceCallManager — 2-Way Full-Duplex Real-Time Voice Engine
+ * Single bidirectional TCP socket on port 9050.
+ * AudioRecord (Mic) -> Socket OutputStream
+ * Socket InputStream -> AudioTrack (Speaker)
  */
 public class VoiceCallManager {
 
     private static final String TAG = "VoiceCall";
+    public static final int CALL_PORT = 9050;
 
-    // Ports for sending/receiving audio
-    public static final int SEND_PORT    = 9000; // Caller → Receiver
-    public static final int RECEIVE_PORT = 9001; // Receiver → Caller
-
-    // Audio settings (CD quality, mono)
-    private static final int SAMPLE_RATE   = 44100;
-    private static final int CHANNEL_IN    = AudioFormat.CHANNEL_IN_MONO;
-    private static final int CHANNEL_OUT   = AudioFormat.CHANNEL_OUT_MONO;
-    private static final int ENCODING      = AudioFormat.ENCODING_PCM_16BIT;
+    // Audio format settings (16kHz PCM 16-bit Mono: clean, low latency over WiFi)
+    private static final int SAMPLE_RATE = 16000;
+    private static final int CHANNEL_IN  = AudioFormat.CHANNEL_IN_MONO;
+    private static final int CHANNEL_OUT = AudioFormat.CHANNEL_OUT_MONO;
+    private static final int ENCODING    = AudioFormat.ENCODING_PCM_16BIT;
 
     private AudioRecord audioRecord;
     private AudioTrack  audioTrack;
 
-    private Socket       sendSocket;
-    private Socket       receiveSocket;
+    private Socket       activeSocket;
     private ServerSocket serverSocket;
 
+    private Thread workerThread;
     private Thread sendThread;
     private Thread receiveThread;
-    private Thread serverThread;
 
-    private boolean isRunning = false;
-    private boolean isMuted   = false;
+    private volatile boolean isRunning = false;
+    private volatile boolean isMuted   = false;
 
     private CallListener listener;
 
@@ -57,173 +55,187 @@ public class VoiceCallManager {
         this.listener = listener;
     }
 
-    // ─── START CALL (Caller side) ──────────────────────────────────
-    public void startCall(String receiverIP) {
+    // ─── START CALL (Caller Side) ──────────────────────────────────
+    public void startCall(String peerIP) {
         isRunning = true;
-
-        new Thread(() -> {
-            try {
-                // Connect to receiver's SEND_PORT (to send audio)
-                Thread.sleep(1000); // Give receiver time to start listening
-                sendSocket = new Socket(receiverIP, SEND_PORT);
-                Log.d(TAG, "Send socket connected to " + receiverIP);
-
-                // Start sending our mic audio
-                startSendingAudio(sendSocket.getOutputStream());
-
-                if (listener != null) listener.onCallConnected();
-
-            } catch (Exception e) {
-                Log.e(TAG, "Send error: " + e.getMessage());
-                if (listener != null) listener.onCallError("Could not connect to peer");
+        workerThread = new Thread(() -> {
+            Socket socket = null;
+            int attempts = 0;
+            // Retry connecting while receiver initializes
+            while (isRunning && attempts < 15) {
+                try {
+                    attempts++;
+                    Log.d(TAG, "Connecting to " + peerIP + ":" + CALL_PORT + " (Attempt " + attempts + ")");
+                    socket = new Socket();
+                    socket.connect(new InetSocketAddress(peerIP, CALL_PORT), 1500);
+                    if (socket.isConnected()) {
+                        Log.d(TAG, "Connected to receiver successfully!");
+                        break;
+                    }
+                } catch (Exception e) {
+                    try { if (socket != null) socket.close(); } catch (Exception ignored) {}
+                    socket = null;
+                    try { Thread.sleep(600); } catch (InterruptedException ie) { break; }
+                }
             }
-        }).start();
 
-        // Also listen for incoming audio from receiver
-        startReceivingAudio(RECEIVE_PORT);
+            if (socket != null && socket.isConnected() && isRunning) {
+                activeSocket = socket;
+                setupDuplexAudio(socket);
+            } else if (isRunning) {
+                Log.e(TAG, "Failed to connect after attempts");
+                if (listener != null) listener.onCallError("Peer not responding / connection failed");
+            }
+        });
+        workerThread.start();
     }
 
-    // ─── RECEIVE CALL (Receiver side) ─────────────────────────────
+    // ─── RECEIVE CALL (Receiver Side) ──────────────────────────────
     public void receiveCall() {
         isRunning = true;
-
-        // Listen for caller's audio on SEND_PORT
-        serverThread = new Thread(() -> {
+        workerThread = new Thread(() -> {
             try {
-                serverSocket = new ServerSocket(SEND_PORT);
-                Log.d(TAG, "Waiting for caller audio on port " + SEND_PORT);
-                Socket incomingSocket = serverSocket.accept();
-                Log.d(TAG, "Caller connected!");
+                serverSocket = new ServerSocket(CALL_PORT);
+                serverSocket.setReuseAddress(true);
+                Log.d(TAG, "Receiver listening on port " + CALL_PORT);
 
-                // Play incoming audio
-                playIncomingAudio(incomingSocket.getInputStream());
+                Socket socket = serverSocket.accept();
+                Log.d(TAG, "Caller accepted from " + socket.getInetAddress());
 
-                if (listener != null) listener.onCallConnected();
-
+                if (isRunning) {
+                    activeSocket = socket;
+                    setupDuplexAudio(socket);
+                }
             } catch (Exception e) {
                 if (isRunning) {
-                    Log.e(TAG, "Receive server error: " + e.getMessage());
+                    Log.e(TAG, "Receiver server error: " + e.getMessage());
+                    if (listener != null) listener.onCallError("Incoming call error: " + e.getMessage());
                 }
             }
         });
-        serverThread.start();
-
-        // Also send our own mic audio back to caller on RECEIVE_PORT
-        // (Caller's IP is needed — passed from ChatActivity)
+        workerThread.start();
     }
 
-    // ─── Send mic audio to peer ───────────────────────────────────
-    private void startSendingAudio(OutputStream out) {
-        int bufferSize = AudioRecord.getMinBufferSize(
-                SAMPLE_RATE, CHANNEL_IN, ENCODING);
+    // ─── SETUP DUPLEX AUDIO (Both Sides) ───────────────────────────
+    private void setupDuplexAudio(Socket socket) {
+        try {
+            int minRecordBuf = AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNEL_IN, ENCODING);
+            int recordBufSize = Math.max(minRecordBuf, 2048);
 
-        audioRecord = new AudioRecord(
-                MediaRecorder.AudioSource.MIC,
-                SAMPLE_RATE, CHANNEL_IN, ENCODING, bufferSize);
+            audioRecord = new AudioRecord(
+                    MediaRecorder.AudioSource.VOICE_COMMUNICATION,
+                    SAMPLE_RATE, CHANNEL_IN, ENCODING, recordBufSize);
 
-        audioRecord.startRecording();
+            int minTrackBuf = AudioTrack.getMinBufferSize(SAMPLE_RATE, CHANNEL_OUT, ENCODING);
+            int trackBufSize = Math.max(minTrackBuf, 2048);
 
-        sendThread = new Thread(() -> {
-            byte[] buffer = new byte[bufferSize];
-            try {
-                while (isRunning) {
-                    int read = audioRecord.read(buffer, 0, buffer.length);
-                    if (read > 0 && !isMuted) {
-                        out.write(buffer, 0, read);
-                        out.flush();
-                    } else if (isMuted) {
-                        // Send silence when muted
-                        byte[] silence = new byte[read];
-                        out.write(silence, 0, read);
-                        out.flush();
+            audioTrack = new AudioTrack(
+                    AudioManager.STREAM_VOICE_CALL,
+                    SAMPLE_RATE, CHANNEL_OUT, ENCODING,
+                    trackBufSize, AudioTrack.MODE_STREAM);
+
+            if (audioRecord.getState() != AudioRecord.STATE_INITIALIZED) {
+                Log.e(TAG, "AudioRecord init failed!");
+                if (listener != null) listener.onCallError("Mic initialization failed");
+                return;
+            }
+
+            audioTrack.play();
+            audioRecord.startRecording();
+
+            if (listener != null) listener.onCallConnected();
+
+            // 1. Thread: Mic -> OutputStream
+            final OutputStream out = socket.getOutputStream();
+            sendThread = new Thread(() -> {
+                byte[] buffer = new byte[1024];
+                try {
+                    while (isRunning && !socket.isClosed()) {
+                        int read = audioRecord.read(buffer, 0, buffer.length);
+                        if (read > 0) {
+                            if (isMuted) {
+                                byte[] silence = new byte[read];
+                                out.write(silence, 0, read);
+                            } else {
+                                out.write(buffer, 0, read);
+                            }
+                            out.flush();
+                        }
                     }
+                } catch (Exception e) {
+                    if (isRunning) Log.e(TAG, "Send audio loop error: " + e.getMessage());
                 }
-            } catch (Exception e) {
-                if (isRunning) Log.e(TAG, "Send thread error: " + e.getMessage());
-            }
-        });
-        sendThread.start();
-        Log.d(TAG, "Audio sending started");
-    }
+            });
+            sendThread.start();
 
-    // ─── Play incoming audio from peer ────────────────────────────
-    private void playIncomingAudio(InputStream in) {
-        int bufferSize = AudioTrack.getMinBufferSize(
-                SAMPLE_RATE, CHANNEL_OUT, ENCODING);
-
-        audioTrack = new AudioTrack(
-                AudioManager.STREAM_VOICE_CALL,
-                SAMPLE_RATE, CHANNEL_OUT, ENCODING,
-                bufferSize, AudioTrack.MODE_STREAM);
-
-        audioTrack.play();
-
-        receiveThread = new Thread(() -> {
-            byte[] buffer = new byte[bufferSize];
-            try {
-                while (isRunning) {
-                    int read = in.read(buffer, 0, buffer.length);
-                    if (read > 0) {
-                        audioTrack.write(buffer, 0, read);
+            // 2. Thread: InputStream -> AudioTrack
+            final InputStream in = socket.getInputStream();
+            receiveThread = new Thread(() -> {
+                byte[] buffer = new byte[1024];
+                try {
+                    while (isRunning && !socket.isClosed()) {
+                        int read = in.read(buffer, 0, buffer.length);
+                        if (read > 0) {
+                            audioTrack.write(buffer, 0, read);
+                        } else if (read == -1) {
+                            // Peer disconnected
+                            break;
+                        }
                     }
+                } catch (Exception e) {
+                    if (isRunning) Log.e(TAG, "Receive audio loop error: " + e.getMessage());
                 }
-            } catch (Exception e) {
-                if (isRunning) Log.e(TAG, "Play thread error: " + e.getMessage());
-            }
-        });
-        receiveThread.start();
-        Log.d(TAG, "Audio playback started");
+                if (isRunning) {
+                    endCall();
+                }
+            });
+            receiveThread.start();
+
+        } catch (Exception e) {
+            Log.e(TAG, "Setup audio error: " + e.getMessage());
+            if (listener != null) listener.onCallError("Audio error: " + e.getMessage());
+        }
     }
 
-    // ─── Start receiving audio on given port ──────────────────────
-    private void startReceivingAudio(int port) {
-        new Thread(() -> {
-            try {
-                ServerSocket srv = new ServerSocket(port);
-                Socket sock = srv.accept();
-                playIncomingAudio(sock.getInputStream());
-            } catch (Exception e) {
-                if (isRunning) Log.e(TAG, "Receive error: " + e.getMessage());
-            }
-        }).start();
-    }
-
-    // ─── Mute / Unmute ────────────────────────────────────────────
     public void setMuted(boolean muted) {
         this.isMuted = muted;
-        Log.d(TAG, "Muted: " + muted);
     }
 
     public boolean isMuted() {
         return isMuted;
     }
 
-    // ─── End Call ─────────────────────────────────────────────────
     public void endCall() {
+        if (!isRunning) return;
         isRunning = false;
+
         try {
             if (audioRecord != null) {
-                audioRecord.stop();
+                try { audioRecord.stop(); } catch (Exception ignored) {}
                 audioRecord.release();
                 audioRecord = null;
             }
             if (audioTrack != null) {
-                audioTrack.stop();
+                try { audioTrack.stop(); } catch (Exception ignored) {}
                 audioTrack.release();
                 audioTrack = null;
             }
-            if (sendSocket    != null) sendSocket.close();
-            if (receiveSocket != null) receiveSocket.close();
-            if (serverSocket  != null) serverSocket.close();
+            if (activeSocket != null) {
+                try { activeSocket.close(); } catch (Exception ignored) {}
+                activeSocket = null;
+            }
+            if (serverSocket != null) {
+                try { serverSocket.close(); } catch (Exception ignored) {}
+                serverSocket = null;
+            }
         } catch (Exception e) {
-            Log.e(TAG, "End call error: " + e.getMessage());
+            Log.e(TAG, "Error cleaning up call: " + e.getMessage());
         }
 
-        if (sendThread    != null) sendThread.interrupt();
+        if (sendThread != null) sendThread.interrupt();
         if (receiveThread != null) receiveThread.interrupt();
-        if (serverThread  != null) serverThread.interrupt();
+        if (workerThread != null) workerThread.interrupt();
 
         if (listener != null) listener.onCallEnded();
-        Log.d(TAG, "Call ended");
     }
 }

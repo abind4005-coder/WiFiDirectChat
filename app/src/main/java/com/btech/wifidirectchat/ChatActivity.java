@@ -47,7 +47,6 @@ public class ChatActivity extends AppCompatActivity {
 
     private final List<String>          messages     = new ArrayList<>();
     private final Map<Integer, String>  filePathMap  = new HashMap<>();
-    // filePathMap: message index → absolute file path (for later save/play)
 
     private ArrayAdapter<String> adapter;
 
@@ -65,7 +64,6 @@ public class ChatActivity extends AppCompatActivity {
     private final Handler mainHandler        = new Handler(Looper.getMainLooper());
     private       boolean isFileServerRunning = true;
 
-    // Currently selected file for saving
     private String selectedFilePathForSave = null;
 
     @Override
@@ -127,11 +125,8 @@ public class ChatActivity extends AppCompatActivity {
         };
         listMessages.setAdapter(adapter);
 
-        // ✅ TAP ANY TIME: Tap on received message → Save / Play dialog
+        // Tap message -> Save / Play dialog
         listMessages.setOnItemClickListener((parent, view, position, id) -> {
-            String item = messages.get(position);
-
-            // Check if this message has a stored file path
             if (filePathMap.containsKey(position)) {
                 String filePath = filePathMap.get(position);
                 File   file     = new File(filePath);
@@ -144,7 +139,6 @@ public class ChatActivity extends AppCompatActivity {
                 boolean isAudio = filePath.endsWith(".m4a") || filePath.endsWith(".mp3");
 
                 if (isAudio) {
-                    // Voice Note options: Play or Save
                     new AlertDialog.Builder(this)
                             .setTitle("🎙️ Voice Note Options")
                             .setMessage("Kya karna chahte hain?")
@@ -159,7 +153,6 @@ public class ChatActivity extends AppCompatActivity {
                             .setNegativeButton("Cancel", null)
                             .show();
                 } else {
-                    // File / Image options: Save to custom folder
                     String fileName = file.getName();
                     new AlertDialog.Builder(this)
                             .setTitle("📁 File Options")
@@ -180,6 +173,51 @@ public class ChatActivity extends AppCompatActivity {
         btnSend.setOnClickListener(v -> sendMessage());
         btnAttachFile.setOnClickListener(v -> openFilePicker());
         btnRecordAudio.setOnClickListener(v -> handleAudioRecording());
+
+        // ── Voice Call Button Listener ──
+        if (btnVoiceCall != null) {
+            btnVoiceCall.setOnClickListener(v -> startVoiceCall());
+        }
+    }
+
+    // ─── Start Outgoing Voice Call ─────────────────────────────────
+    private void startVoiceCall() {
+        if (ActivityCompat.checkSelfPermission(this,
+                Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.RECORD_AUDIO}, AUDIO_PERM_CODE);
+            return;
+        }
+
+        String destIP = (lastKnownPeerIP != null) ? lastKnownPeerIP : "192.168.49.1";
+        Toast.makeText(this, "Calling " + (peerName != null ? peerName : "Peer") + "...", Toast.LENGTH_SHORT).show();
+
+        // Send call signal to peer over port 8888
+        String packet = myUserProfileName + "|CALL_INVITE|__CALL_INVITE__";
+        new SocketClient(destIP, packet, new SocketClient.SendListener() {
+            @Override
+            public void onSendSuccess() {
+                mainHandler.post(() -> {
+                    Intent callIntent = new Intent(ChatActivity.this, CallActivity.class);
+                    callIntent.putExtra("isCaller", true);
+                    callIntent.putExtra("peerName", peerName);
+                    callIntent.putExtra("peerIP",   destIP);
+                    startActivity(callIntent);
+                });
+            }
+
+            @Override
+            public void onSendError(String error) {
+                mainHandler.post(() -> {
+                    // Launch caller even if signaling packet had network delay
+                    Intent callIntent = new Intent(ChatActivity.this, CallActivity.class);
+                    callIntent.putExtra("isCaller", true);
+                    callIntent.putExtra("peerName", peerName);
+                    callIntent.putExtra("peerIP",   destIP);
+                    startActivity(callIntent);
+                });
+            }
+        }).start();
     }
 
     // ─── Open File Picker (to SEND) ────────────────────────────────
@@ -256,7 +294,6 @@ public class ChatActivity extends AppCompatActivity {
                                     @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        // File selected to SEND
         if (requestCode == FILE_PICK_CODE && resultCode == RESULT_OK && data != null) {
             Uri fileUri = data.getData();
             if (fileUri != null) {
@@ -276,7 +313,6 @@ public class ChatActivity extends AppCompatActivity {
             }
         }
 
-        // Custom save location selected
         if (requestCode == SAVE_FILE_CODE && resultCode == RESULT_OK && data != null) {
             Uri saveUri = data.getData();
             if (saveUri != null && selectedFilePathForSave != null) {
@@ -286,7 +322,6 @@ public class ChatActivity extends AppCompatActivity {
         }
     }
 
-    // ─── Write received file to user-selected Uri ──────────────────
     private void saveFileToUri(String sourcePath, Uri targetUri) {
         new Thread(() -> {
             try {
@@ -319,7 +354,6 @@ public class ChatActivity extends AppCompatActivity {
                     Socket      client      = serverSocket.accept();
                     InputStream inputStream = client.getInputStream();
 
-                    // Read filename
                     int    nameLen   = inputStream.read();
                     byte[] nameBytes = new byte[nameLen];
                     int    totalRead = 0;
@@ -330,7 +364,6 @@ public class ChatActivity extends AppCompatActivity {
                     }
                     String receivedFileName = new String(nameBytes, "UTF-8");
 
-                    // Save permanently in app's FILES directory (persists across sessions!)
                     File saveDir = new File(getFilesDir(), "ReceivedFiles");
                     if (!saveDir.exists()) saveDir.mkdirs();
 
@@ -351,13 +384,10 @@ public class ChatActivity extends AppCompatActivity {
                     final String savedPath = savedFile.getAbsolutePath();
 
                     mainHandler.post(() -> {
-                        int msgIndex = messages.size(); // Index of new message
-
+                        int msgIndex = messages.size();
                         String label = isAudio
                                 ? "👤 Dost: 🎙️ [VOICE NOTE — Tap to Play or Save]"
                                 : "👤 Dost: 📁 [FILE: " + receivedFileName + " — Tap to Save]";
-
-                        // ✅ Store file path mapped to this message index
                         filePathMap.put(msgIndex, savedPath);
                         addMessage(label);
                     });
@@ -396,10 +426,35 @@ public class ChatActivity extends AppCompatActivity {
         }).start();
     }
 
-    // ─── Mesh Message Receiver ─────────────────────────────────────
+    // ─── Mesh Message Receiver & Incoming Call Handler ─────────────
     private void startMeshServer() {
         socketServer = new SocketServer((message, senderIP) -> {
             lastKnownPeerIP = senderIP;
+
+            // Incoming Voice Call Check
+            if (message != null && message.contains("__CALL_INVITE__")) {
+                String[] parts = message.split("\\|", 3);
+                String caller = (parts.length > 0 && !parts[0].isEmpty()) ? parts[0] : "Peer";
+
+                mainHandler.post(() -> {
+                    new AlertDialog.Builder(ChatActivity.this)
+                        .setTitle("📞 Incoming Voice Call")
+                        .setMessage(caller + " se voice call aa rahi hai. Accept karein?")
+                        .setCancelable(false)
+                        .setPositiveButton("ACCEPT 📞", (dialog, which) -> {
+                            Intent callIntent = new Intent(ChatActivity.this, CallActivity.class);
+                            callIntent.putExtra("isCaller", false);
+                            callIntent.putExtra("peerName", caller);
+                            callIntent.putExtra("peerIP",   senderIP);
+                            startActivity(callIntent);
+                        })
+                        .setNegativeButton("DECLINE 📵", null)
+                        .show();
+                });
+                return;
+            }
+
+            // Normal Encrypted Text Message
             String[] parts = message.split("\\|", 3);
             if (parts.length == 3) {
                 String sender       = parts[0];
@@ -412,7 +467,6 @@ public class ChatActivity extends AppCompatActivity {
         socketServer.start();
     }
 
-    // ─── Helper: Add message to list ──────────────────────────────
     private void addMessage(String msg) {
         messages.add(msg);
         adapter.notifyDataSetChanged();

@@ -1,6 +1,8 @@
 package com.btech.wifidirectchat;
 
-import android.content.Intent;
+import android.Manifest;
+import android.content.Context;
+import android.content.pm.PackageManager;
 import android.media.AudioManager;
 import android.os.Bundle;
 import android.os.Handler;
@@ -8,10 +10,14 @@ import android.os.Looper;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 
 public class CallActivity extends AppCompatActivity
         implements VoiceCallManager.CallListener {
+
+    private static final int PERM_RECORD_AUDIO = 501;
 
     private TextView     tvCallerName, tvStatus, tvDuration, tvAvatarLetter, tvMuteIcon, tvSpeakerIcon;
     private LinearLayout btnMute, btnEndCall, btnSpeaker;
@@ -30,12 +36,10 @@ public class CallActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_call);
 
-        // Get data from intent
         isCaller = getIntent().getBooleanExtra("isCaller", true);
         peerName = getIntent().getStringExtra("peerName");
         peerIP   = getIntent().getStringExtra("peerIP");
 
-        // Views
         tvCallerName   = findViewById(R.id.tv_caller_name);
         tvStatus       = findViewById(R.id.tv_call_status);
         tvDuration     = findViewById(R.id.tv_duration);
@@ -46,52 +50,71 @@ public class CallActivity extends AppCompatActivity
         btnEndCall     = findViewById(R.id.btn_end_call);
         btnSpeaker     = findViewById(R.id.btn_speaker);
 
-        audioManager = (AudioManager) getSystemService(AUDIO_SERVICE);
+        audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        if (audioManager != null) {
+            audioManager.setMode(AudioManager.MODE_IN_COMMUNICATION);
+        }
 
-        // Set peer name and avatar
-        tvCallerName.setText(peerName != null ? peerName : "Unknown");
+        tvCallerName.setText(peerName != null ? peerName : "Peer Device");
         if (peerName != null && !peerName.isEmpty()) {
             tvAvatarLetter.setText(String.valueOf(peerName.charAt(0)).toUpperCase());
         }
 
-        // Init voice call
         voiceCallManager = new VoiceCallManager(this);
 
-        if (isCaller) {
-            tvStatus.setText("📞 Calling " + peerName + "...");
-            voiceCallManager.startCall(peerIP);
-        } else {
-            tvStatus.setText("📲 Incoming call from " + peerName);
-            voiceCallManager.receiveCall();
-        }
-
-        // Mute Button
         btnMute.setOnClickListener(v -> {
             boolean muted = !voiceCallManager.isMuted();
             voiceCallManager.setMuted(muted);
             tvMuteIcon.setText(muted ? "🔇" : "🎤");
             btnMute.setAlpha(muted ? 0.5f : 1.0f);
-            Toast.makeText(this, muted ? "Muted 🔇" : "Unmuted 🎤",
-                    Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, muted ? "Mic Muted 🔇" : "Mic ON 🎤", Toast.LENGTH_SHORT).show();
         });
 
-        // Speaker Button
         btnSpeaker.setOnClickListener(v -> {
             isSpeakerOn = !isSpeakerOn;
-            audioManager.setSpeakerphoneOn(isSpeakerOn);
+            if (audioManager != null) {
+                audioManager.setSpeakerphoneOn(isSpeakerOn);
+            }
             tvSpeakerIcon.setText(isSpeakerOn ? "🔈" : "🔊");
             btnSpeaker.setAlpha(isSpeakerOn ? 1.0f : 0.6f);
-            Toast.makeText(this, isSpeakerOn ? "Speaker ON 🔊" : "Speaker OFF",
-                    Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, isSpeakerOn ? "Speaker ON 🔊" : "Speaker OFF", Toast.LENGTH_SHORT).show();
         });
 
-        // End Call Button
-        btnEndCall.setOnClickListener(v -> {
-            endCall();
-        });
+        btnEndCall.setOnClickListener(v -> endCall());
+
+        // Check mic permission first
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.RECORD_AUDIO}, PERM_RECORD_AUDIO);
+        } else {
+            initiateCallEngine();
+        }
     }
 
-    // ─── Timer: Count call duration ───────────────────────────────
+    private void initiateCallEngine() {
+        if (isCaller) {
+            tvStatus.setText("📞 Calling " + (peerName != null ? peerName : "") + "...");
+            voiceCallManager.startCall(peerIP);
+        } else {
+            tvStatus.setText("📲 Answering Call...");
+            voiceCallManager.receiveCall();
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == PERM_RECORD_AUDIO) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                initiateCallEngine();
+            } else {
+                Toast.makeText(this, "Microphone permission required for voice calls!", Toast.LENGTH_LONG).show();
+                finish();
+            }
+        }
+    }
+
     private Runnable timerRunnable = new Runnable() {
         @Override
         public void run() {
@@ -113,11 +136,16 @@ public class CallActivity extends AppCompatActivity
 
     private void endCall() {
         stopTimer();
-        if (voiceCallManager != null) voiceCallManager.endCall();
+        if (audioManager != null) {
+            audioManager.setMode(AudioManager.MODE_NORMAL);
+            audioManager.setSpeakerphoneOn(false);
+        }
+        if (voiceCallManager != null) {
+            voiceCallManager.endCall();
+        }
         finish();
     }
 
-    // ─── CallListener Callbacks ───────────────────────────────────
     @Override
     public void onCallConnected() {
         runOnUiThread(() -> {
@@ -130,6 +158,7 @@ public class CallActivity extends AppCompatActivity
     public void onCallEnded() {
         runOnUiThread(() -> {
             stopTimer();
+            Toast.makeText(CallActivity.this, "Call Ended", Toast.LENGTH_SHORT).show();
             finish();
         });
     }
@@ -138,7 +167,7 @@ public class CallActivity extends AppCompatActivity
     public void onCallError(String message) {
         runOnUiThread(() -> {
             tvStatus.setText("❌ " + message);
-            Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+            Toast.makeText(CallActivity.this, message, Toast.LENGTH_LONG).show();
             timerHandler.postDelayed(this::finish, 2000);
         });
     }
@@ -147,7 +176,13 @@ public class CallActivity extends AppCompatActivity
     protected void onDestroy() {
         super.onDestroy();
         stopTimer();
-        if (voiceCallManager != null) voiceCallManager.endCall();
+        if (audioManager != null) {
+            audioManager.setMode(AudioManager.MODE_NORMAL);
+            audioManager.setSpeakerphoneOn(false);
+        }
+        if (voiceCallManager != null) {
+            voiceCallManager.endCall();
+        }
     }
 
     @Override
