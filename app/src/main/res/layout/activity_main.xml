@@ -4,46 +4,68 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#0A0E17">
+    android:background="#0A0E17"
+    android:fitsSystemWindows="true">
 
-    <!-- Top Header using App Name Dynamic Resource -->
+    <!-- ══ TOP HEADER BAR ══════════════════════════════════════════ -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="70dp"
+        android:layout_height="64dp"
         android:background="#121824"
-        android:padding="16dp"
-        android:elevation="8dp"
-        android:gravity="center_vertical">
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:elevation="6dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
 
-        <TextView
+        <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="🌐 DMS P2P"
-            android:textSize="22sp"
-            android:textColor="#00F2FE"
-            android:textStyle="bold"/>
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🌐 DMS MeshNet"
+                android:textSize="20sp"
+                android:textColor="#00F2FE"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tv_user_profile"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="👤 My Node: Active"
+                android:textColor="#8B949E"
+                android:textSize="11sp" />
+        </LinearLayout>
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="OFFLINE MESH"
             android:textColor="#00FF87"
-            android:textSize="11sp"
+            android:textSize="10sp"
             android:textStyle="bold"
             android:background="#1A2638"
-            android:padding="6dp"/>
+            android:paddingStart="8dp"
+            android:paddingEnd="8dp"
+            android:paddingTop="4dp"
+            android:paddingBottom="4dp" />
 
     </LinearLayout>
 
-    <!-- Background Router Card -->
+    <!-- ══ RELAY ROUTER CARD (Compact & Sleek) ═════════════════════ -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#162032"
+        android:background="@drawable/radar_card_bg"
         android:orientation="horizontal"
-        android:padding="16dp"
-        android:layout_margin="14dp"
+        android:padding="12dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="12dp"
         android:gravity="center_vertical">
 
         <LinearLayout
@@ -55,10 +77,10 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="⚡ Background Relay Router"
+                android:text="⚡ Background Mesh Relay"
                 android:textColor="#FFFFFF"
-                android:textSize="15sp"
-                android:textStyle="bold"/>
+                android:textSize="14sp"
+                android:textStyle="bold" />
 
             <TextView
                 android:id="@+id/tv_router_status"
@@ -66,71 +88,130 @@
                 android:layout_height="wrap_content"
                 android:text="Router Mode: OFF"
                 android:textColor="#8B949E"
-                android:textSize="12sp"
-                android:paddingTop="2dp"/>
+                android:textSize="11sp" />
         </LinearLayout>
 
         <Switch
             android:id="@+id/switch_router"
             android:layout_width="wrap_content"
-            android:layout_height="48dp"
-            android:minWidth="48dp"
-            android:minHeight="48dp"
-            android:padding="8dp"/>
+            android:layout_height="wrap_content"
+            android:minHeight="40dp" />
 
     </LinearLayout>
 
-    <!-- Status Banner -->
-    <TextView
-        android:id="@+id/tv_status"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Status: Ready to Discover"
-        android:textColor="#00F2FE"
-        android:gravity="center"
-        android:padding="8dp"
-        android:textSize="13sp"
-        android:textStyle="italic"/>
-
-    <!-- Section Label -->
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="AVAILABLE PEERS &amp; NODES"
-        android:textColor="#4FACFE"
-        android:paddingStart="16dp"
-        android:paddingTop="8dp"
-        android:paddingBottom="4dp"
-        android:textSize="11sp"
-        android:textStyle="bold"/>
-
-    <!-- List View -->
-    <ListView
-        android:id="@+id/list_peers"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:background="#0A0E17"
-        android:divider="#1F293D"
-        android:dividerHeight="1dp"/>
-
-    <!-- Search Button Bar -->
+    <!-- ══ CENTER CIRCULAR RADAR SCANNING SECTION ══════════════════ -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:orientation="vertical"
         android:gravity="center"
-        android:padding="16dp"
-        android:background="#121824">
+        android:paddingTop="18dp"
+        android:paddingBottom="14dp">
 
-        <Button
-            android:id="@+id/btn_discover"
+        <!-- Circular Radar Container -->
+        <RelativeLayout
+            android:id="@+id/radar_container"
             android:layout_width="220dp"
-            android:layout_height="52dp"
-            android:text="🔍 SEARCH PEERS"
-            android:textSize="15sp"
+            android:layout_height="220dp"
+            android:gravity="center">
+
+            <!-- Outer Radar Glow Wave Ring -->
+            <View
+                android:id="@+id/radar_ring_outer"
+                android:layout_width="210dp"
+                android:layout_height="210dp"
+                android:layout_centerInParent="true"
+                android:background="@drawable/glow_circle_outer" />
+
+            <!-- Middle Radar Glow Wave Ring -->
+            <View
+                android:id="@+id/radar_ring_inner"
+                android:layout_width="165dp"
+                android:layout_height="165dp"
+                android:layout_centerInParent="true"
+                android:background="@drawable/glow_circle_inner" />
+
+            <!-- CENTER CIRCULAR BUTTON -->
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btn_discover"
+                android:layout_width="125dp"
+                android:layout_height="125dp"
+                android:layout_centerInParent="true"
+                android:background="@drawable/circle_radar_button"
+                android:text="📡\nSCAN"
+                android:textColor="#00F2FE"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:lineSpacingExtra="2dp"
+                android:gravity="center"
+                android:elevation="8dp"
+                android:stateListAnimator="@null" />
+
+        </RelativeLayout>
+
+        <!-- Status Text directly under circular button -->
+        <TextView
+            android:id="@+id/tv_status"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Tap Radar to Scan Nearby Nodes"
+            android:textColor="#00FF87"
+            android:textSize="13sp"
             android:textStyle="bold"
-            android:backgroundTint="#00F2FE"
-            android:textColor="#0A0E17"/>
+            android:layout_marginTop="8dp" />
+
+    </LinearLayout>
+
+    <!-- ══ AVAILABLE PEERS SECTION ═════════════════════════════════ -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:background="@drawable/radar_card_bg"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        android:padding="12dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:paddingBottom="8dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="DISCOVERED PEERS"
+                android:textColor="#4FACFE"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.1" />
+
+            <TextView
+                android:id="@+id/tv_peer_count"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="0 Nodes"
+                android:textColor="#8B949E"
+                android:textSize="11sp" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="#1F2E45"
+            android:layout_marginBottom="8dp" />
+
+        <ListView
+            android:id="@+id/list_peers"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:divider="#1A283E"
+            android:dividerHeight="1dp" />
 
     </LinearLayout>
 

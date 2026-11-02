@@ -50,7 +50,8 @@ public class MainActivity extends AppCompatActivity {
 
     private Button   btnDiscover;
     private ListView listPeers;
-    private TextView tvStatus, tvRouterStatus;
+    private TextView tvStatus, tvRouterStatus, tvUserProfile, tvPeerCount;
+    private View     radarRingOuter, radarRingInner;
     private Switch   switchRouter;
 
     private WiFiDirectManager    wifiManager;
@@ -86,8 +87,16 @@ public class MainActivity extends AppCompatActivity {
         tvStatus       = findViewById(R.id.tv_status);
         tvRouterStatus = findViewById(R.id.tv_router_status);
         switchRouter   = findViewById(R.id.switch_router);
+        tvUserProfile  = findViewById(R.id.tv_user_profile);
+        tvPeerCount    = findViewById(R.id.tv_peer_count);
+        radarRingOuter = findViewById(R.id.radar_ring_outer);
+        radarRingInner = findViewById(R.id.radar_ring_inner);
 
         pulseAnim = AnimationUtils.loadAnimation(this, R.anim.pulse);
+
+        Animation glowAnim = AnimationUtils.loadAnimation(this, R.anim.glow_pulse);
+        if (radarRingOuter != null) radarRingOuter.startAnimation(glowAnim);
+        if (radarRingInner != null) radarRingInner.startAnimation(glowAnim);
 
         checkAndPromptUniqueUserProfile();
 
@@ -147,8 +156,9 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
                 return;
             }
+            btnDiscover.setText("📡\nSCANNING");
             btnDiscover.startAnimation(pulseAnim);
-            tvStatus.setText("🔍 Scanning for peers...");
+            tvStatus.setText("🔍 Scanning for nearby peers...");
             checkPermissionAndDiscover();
         });
 
@@ -194,6 +204,7 @@ public class MainActivity extends AppCompatActivity {
                             + (1000 + new Random().nextInt(9000));
                 }
                 prefs.edit().putString("username", userProfileName).apply();
+                updateProfileBadgeUI();
                 Toast.makeText(this, "Profile Locked: " + userProfileName,
                         Toast.LENGTH_LONG).show();
 
@@ -204,7 +215,14 @@ public class MainActivity extends AppCompatActivity {
             builder.show();
         } else {
             // Already existing user — update last seen
+            updateProfileBadgeUI();
             updateLastSeen(userProfileName);
+        }
+    }
+
+    private void updateProfileBadgeUI() {
+        if (tvUserProfile != null && userProfileName != null) {
+            tvUserProfile.setText("👤 " + userProfileName + " 🟢");
         }
     }
 
@@ -298,6 +316,7 @@ public class MainActivity extends AppCompatActivity {
     public void updatePeerList() {
         wifiManager.getPeers(peerList -> {
             btnDiscover.clearAnimation();
+            btnDiscover.setText("📡\nSCAN");
             if (peerList != null && peerList.getDeviceList() != null) {
                 peers.clear();
                 deviceNames.clear();
@@ -309,9 +328,12 @@ public class MainActivity extends AppCompatActivity {
                     deviceNames.add("👤 " + name + " 🟢 [Strong]");
                 }
                 adapter.notifyDataSetChanged();
+                if (tvPeerCount != null) {
+                    tvPeerCount.setText(peers.size() + " Found");
+                }
                 tvStatus.setText(peers.isEmpty()
-                        ? "No devices found"
-                        : peers.size() + " device(s) found!");
+                        ? "No devices found. Tap radar to retry."
+                        : peers.size() + " device(s) found! Tap to connect");
             }
         });
     }
