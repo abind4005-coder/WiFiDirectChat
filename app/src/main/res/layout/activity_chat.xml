@@ -6,29 +6,59 @@
     android:background="#0A0E17"
     android:fitsSystemWindows="true">
 
-    <!-- Top Header Bar -->
+    <!-- ══ TOP HEADER BAR ══════════════════════════════════════════ -->
     <LinearLayout
         android:id="@+id/header_bar"
         android:layout_width="match_parent"
-        android:layout_height="60dp"
+        android:layout_height="62dp"
         android:background="#121824"
         android:gravity="center_vertical"
-        android:padding="12dp"
-        android:layout_alignParentTop="true">
+        android:paddingStart="12dp"
+        android:paddingEnd="8dp"
+        android:layout_alignParentTop="true"
+        android:orientation="horizontal">
 
-        <TextView
-            android:layout_width="wrap_content"
+        <!-- Left: Lock Icon + Peer Name -->
+        <LinearLayout
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="🔒 AES-256 MESH"
-            android:textColor="#00FF87"
-            android:textSize="11sp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tv_peer_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Peer Device"
+                android:textColor="#00F2FE"
+                android:textSize="16sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🔒 AES-256 Encrypted"
+                android:textColor="#00FF87"
+                android:textSize="10sp" />
+
+        </LinearLayout>
+
+        <!-- Right: 📞 CALL Button -->
+        <Button
+            android:id="@+id/btn_voice_call"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:text="📞 Call"
+            android:textSize="12sp"
             android:textStyle="bold"
-            android:background="#1A2638"
-            android:padding="6dp"/>
+            android:textColor="#0A0E17"
+            android:backgroundTint="#00FF87"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp" />
 
     </LinearLayout>
 
-    <!-- Bottom Input Controls with Fixed 48dp Touch Sizes -->
+    <!-- ══ BOTTOM INPUT BAR ════════════════════════════════════════ -->
     <LinearLayout
         android:id="@+id/input_container"
         android:layout_width="match_parent"
@@ -39,30 +69,31 @@
         android:gravity="center_vertical"
         android:layout_alignParentBottom="true">
 
+        <!-- File Button -->
         <Button
             android:id="@+id/btn_attach_file"
             android:layout_width="wrap_content"
             android:layout_height="48dp"
             android:minHeight="48dp"
             android:layout_marginEnd="4dp"
-            android:text="📁 FILE"
-            android:textSize="12sp"
-            android:textStyle="bold"
+            android:text="📁"
+            android:textSize="16sp"
             android:backgroundTint="#1F293D"
-            android:textColor="#00F2FE"/>
+            android:textColor="#00F2FE" />
 
+        <!-- Record Button -->
         <Button
             android:id="@+id/btn_record_audio"
-            android:layout_width="76dp"
-            android:layout_height="50dp"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
             android:layout_marginEnd="4dp"
             android:backgroundTint="#1F293D"
             android:minHeight="48dp"
-            android:text="🎙️ REC"
+            android:text="🎙️"
             android:textColor="#FF5555"
-            android:textSize="12sp"
-            android:textStyle="bold" />
+            android:textSize="16sp" />
 
+        <!-- Message Input -->
         <EditText
             android:id="@+id/et_message"
             android:layout_width="0dp"
@@ -76,8 +107,9 @@
             android:textSize="14sp"
             android:maxLines="4"
             android:inputType="textMultiLine"
-            android:background="#162032"/>
+            android:background="#162032" />
 
+        <!-- Send Button -->
         <Button
             android:id="@+id/btn_send"
             android:layout_width="54dp"
@@ -87,11 +119,11 @@
             android:text="➤"
             android:textSize="18sp"
             android:backgroundTint="#00F2FE"
-            android:textColor="#0A0E17"/>
+            android:textColor="#0A0E17" />
 
     </LinearLayout>
 
-    <!-- Messages List Fitted Between Header and Input Bar -->
+    <!-- ══ MESSAGES LIST ═══════════════════════════════════════════ -->
     <ListView
         android:id="@+id/list_messages"
         android:layout_width="match_parent"
@@ -102,17 +134,6 @@
         android:divider="#1F293D"
         android:dividerHeight="1dp"
         android:stackFromBottom="true"
-        android:transcriptMode="alwaysScroll">
-
-        <TextView
-            android:id="@+id/tv_peer_name"
-            android:layout_width="166dp"
-            android:layout_height="27dp"
-            android:layout_weight="1"
-            android:text="Peer Device"
-            android:textColor="#00F2FE"
-            android:textSize="18sp"
-            android:textStyle="bold" />
-    </ListView>
+        android:transcriptMode="alwaysScroll" />
 
 </RelativeLayout>
