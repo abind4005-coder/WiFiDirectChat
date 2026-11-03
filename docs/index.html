@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DMS — Decentralized Mesh System</title>
+  <meta name="description" content="Communicate without internet. DMS is a peer-to-peer offline mesh networking app using WiFi Direct with AES-256 encryption, voice calling, and blockchain logging." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --cyan: #00F2FE;
+      --green: #00FF87;
+      --purple: #8B5CF6;
+      --dark: #0A0E17;
+      --dark2: #0F1623;
+      --dark3: #131C2E;
+      --card: rgba(255,255,255,0.04);
+      --border: rgba(0,242,254,0.15);
+      --text: #E2E8F0;
+      --muted: #94A3B8;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--dark);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* ── BACKGROUND GRID ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,242,254,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,242,254,0.03) 1px, transparent 1px);
+      background-size: 50px 50px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    section, nav, footer { position: relative; z-index: 1; }
+
+    /* ── NAVBAR ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 48px;
+      background: rgba(10,14,23,0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      z-index: 100;
+    }
+
+    .nav-logo {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 20px;
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--cyan), var(--green));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: 2px;
+    }
+
+    .nav-links { display: flex; gap: 32px; list-style: none; }
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color .2s;
+    }
+    .nav-links a:hover { color: var(--cyan); }
+
+    .btn-nav {
+      background: linear-gradient(135deg, var(--cyan), var(--green));
+      color: #000;
+      border: none;
+      padding: 10px 24px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: opacity .2s, transform .2s;
+    }
+    .btn-nav:hover { opacity: .85; transform: translateY(-1px); }
+
+    /* ── HERO ── */
+    #hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 120px 24px 80px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0,242,254,0.08);
+      border: 1px solid rgba(0,242,254,0.25);
+      border-radius: 999px;
+      padding: 6px 18px;
+      font-size: 13px;
+      color: var(--cyan);
+      font-weight: 500;
+      margin-bottom: 28px;
+      letter-spacing: 0.5px;
+    }
+
+    .hero-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(40px, 8vw, 88px);
+      font-weight: 900;
+      line-height: 1.05;
+      letter-spacing: -1px;
+      margin-bottom: 12px;
+    }
+
+    .gradient-text {
+      background: linear-gradient(135deg, var(--cyan) 0%, var(--green) 60%, var(--cyan) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      background-size: 200%;
+      animation: shimmer 3s linear infinite;
+    }
+
+    @keyframes shimmer {
+      0% { background-position: 0% 50%; }
+      100% { background-position: 200% 50%; }
+    }
+
+    .hero-sub {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(16px, 3vw, 26px);
+      color: var(--muted);
+      font-weight: 400;
+      margin-bottom: 24px;
+      letter-spacing: 3px;
+    }
+
+    .hero-desc {
+      max-width: 620px;
+      font-size: 17px;
+      color: var(--muted);
+      line-height: 1.75;
+      margin-bottom: 44px;
+    }
+
+    .hero-buttons { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center; }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: linear-gradient(135deg, var(--cyan), var(--green));
+      color: #000;
+      text-decoration: none;
+      padding: 16px 36px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 16px;
+      transition: transform .2s, box-shadow .2s;
+      box-shadow: 0 0 30px rgba(0,242,254,0.3);
+    }
+    .btn-primary:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 0 50px rgba(0,242,254,0.5);
+    }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: transparent;
+      color: var(--cyan);
+      text-decoration: none;
+      padding: 16px 36px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 16px;
+      border: 1.5px solid var(--cyan);
+      transition: background .2s, transform .2s;
+    }
+    .btn-secondary:hover {
+      background: rgba(0,242,254,0.08);
+      transform: translateY(-3px);
+    }
+
+    /* ── RADAR ANIMATION ── */
+    .radar-container {
+      position: relative;
+      width: 280px;
+      height: 280px;
+      margin: 60px auto 0;
+    }
+
+    .radar-ring {
+      position: absolute;
+      border-radius: 50%;
+      border: 1.5px solid var(--cyan);
+      animation: radarPulse 2.5s ease-out infinite;
+      opacity: 0;
+    }
+
+    .radar-ring:nth-child(1) { inset: 60px; animation-delay: 0s; }
+    .radar-ring:nth-child(2) { inset: 30px; animation-delay: 0.5s; }
+    .radar-ring:nth-child(3) { inset: 0px;  animation-delay: 1s; }
+
+    @keyframes radarPulse {
+      0%   { opacity: 0.8; transform: scale(0.9); }
+      100% { opacity: 0; transform: scale(1.1); }
+    }
+
+    .radar-center {
+      position: absolute;
+      inset: 50%;
+      transform: translate(-50%, -50%);
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(0,242,254,0.2) 0%, transparent 70%);
+      border: 2px solid var(--cyan);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      box-shadow: 0 0 40px rgba(0,242,254,0.3), inset 0 0 30px rgba(0,242,254,0.1);
+    }
+
+    .radar-sweep {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: conic-gradient(from 0deg, transparent 75%, rgba(0,242,254,0.3) 100%);
+      animation: sweep 3s linear infinite;
+    }
+
+    @keyframes sweep { to { transform: rotate(360deg); } }
+
+    /* ── STATS BAR ── */
+    .stats-bar {
+      display: flex;
+      justify-content: center;
+      gap: 48px;
+      flex-wrap: wrap;
+      padding: 40px 24px;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,0.02);
+    }
+
+    .stat { text-align: center; }
+    .stat-num {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 32px;
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--cyan), var(--green));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .stat-label { font-size: 13px; color: var(--muted); margin-top: 4px; letter-spacing: 0.5px; }
+
+    /* ── SECTION COMMON ── */
+    .section-tag {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--cyan);
+      margin-bottom: 12px;
+    }
+
+    .section-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(26px, 4vw, 44px);
+      font-weight: 700;
+      margin-bottom: 16px;
+      line-height: 1.2;
+    }
+
+    .section-desc {
+      color: var(--muted);
+      font-size: 16px;
+      max-width: 560px;
+      margin: 0 auto 56px;
+      line-height: 1.7;
+    }
+
+    section { padding: 96px 24px; }
+    .container { max-width: 1100px; margin: 0 auto; }
+    .text-center { text-align: center; }
+
+    /* ── FEATURES ── */
+    #features { background: var(--dark2); }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+    }
+
+    .feature-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+      transition: transform .25s, border-color .25s, box-shadow .25s;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-6px);
+      border-color: var(--cyan);
+      box-shadow: 0 0 30px rgba(0,242,254,0.12);
+    }
+
+    .feature-icon {
+      font-size: 40px;
+      margin-bottom: 18px;
+      display: block;
+    }
+
+    .feature-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--cyan);
+      margin-bottom: 10px;
+      letter-spacing: 0.5px;
+    }
+
+    .feature-desc { font-size: 14px; color: var(--muted); line-height: 1.7; }
+
+    /* ── HOW IT WORKS ── */
+    #how {
+      background: var(--dark);
+    }
+
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      max-width: 700px;
+      margin: 0 auto;
+    }
+
+    .step {
+      display: flex;
+      gap: 28px;
+      align-items: flex-start;
+      position: relative;
+    }
+
+    .step:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      left: 27px;
+      top: 64px;
+      width: 2px;
+      height: calc(100% - 32px);
+      background: linear-gradient(180deg, var(--cyan), transparent);
+    }
+
+    .step-num {
+      flex-shrink: 0;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, rgba(0,242,254,0.15), rgba(0,255,135,0.1));
+      border: 1.5px solid var(--cyan);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 18px;
+      font-weight: 900;
+      color: var(--cyan);
+    }
+
+    .step-body { padding-bottom: 48px; }
+    .step-title { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+    .step-desc { font-size: 15px; color: var(--muted); line-height: 1.7; }
+
+    /* ── TECH STACK ── */
+    #tech { background: var(--dark2); }
+
+    .tech-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      justify-content: center;
+    }
+
+    .tech-badge {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 10px 22px;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: border-color .2s, color .2s;
+    }
+    .tech-badge:hover { border-color: var(--cyan); color: var(--cyan); }
+
+    /* ── TEAM ── */
+    #team { background: var(--dark); }
+
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 24px;
+    }
+
+    .team-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px 24px;
+      text-align: center;
+      transition: transform .25s, border-color .25s;
+    }
+
+    .team-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--green);
+    }
+
+    .avatar {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--cyan), var(--purple));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      margin: 0 auto 16px;
+      border: 2px solid rgba(0,242,254,0.3);
+    }
+
+    .team-name { font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+    .team-role { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+
+    .team-leader-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, var(--cyan), var(--green));
+      color: #000;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      padding: 3px 10px;
+      border-radius: 999px;
+      text-transform: uppercase;
+    }
+
+    /* ── CTA ── */
+    #download {
+      background: linear-gradient(135deg, rgba(0,242,254,0.06) 0%, rgba(0,255,135,0.04) 100%);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      text-align: center;
+    }
+
+    #download .section-title { font-size: clamp(28px, 5vw, 50px); }
+
+    /* ── FOOTER ── */
+    footer {
+      background: var(--dark2);
+      border-top: 1px solid var(--border);
+      padding: 40px 24px;
+      text-align: center;
+    }
+
+    .footer-logo {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 18px;
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--cyan), var(--green));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 10px;
+    }
+
+    .footer-links { display: flex; justify-content: center; gap: 24px; margin: 16px 0; flex-wrap: wrap; }
+    .footer-links a { color: var(--muted); text-decoration: none; font-size: 14px; transition: color .2s; }
+    .footer-links a:hover { color: var(--cyan); }
+
+    .footer-copy { font-size: 13px; color: var(--muted); margin-top: 8px; }
+    .footer-college { font-size: 12px; color: rgba(148,163,184,0.6); margin-top: 6px; }
+
+    /* ── MOBILE ── */
+    @media (max-width: 768px) {
+      nav { padding: 14px 20px; }
+      .nav-links { display: none; }
+      .features-grid { grid-template-columns: 1fr; }
+      .stats-bar { gap: 28px; }
+      .hero-buttons { flex-direction: column; align-items: center; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── NAVBAR ── -->
+<nav>
+  <div class="nav-logo">DMS</div>
+  <ul class="nav-links">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#how">How It Works</a></li>
+    <li><a href="#tech">Tech Stack</a></li>
+    <li><a href="#team">Team</a></li>
+  </ul>
+  <a class="btn-nav" href="https://github.com/abind4005-coder/WiFiDirectChat/releases" target="_blank">⬇ Download APK</a>
+</nav>
+
+<!-- ── HERO ── -->
+<section id="hero">
+  <div class="badge">🛰️ B.Tech Final Year Project — BIT Gorakhpur &nbsp;|&nbsp; CSE 2025–26</div>
+
+  <h1 class="hero-title">
+    <span class="gradient-text">DMS</span>
+  </h1>
+  <p class="hero-sub">Decentralized Mesh System</p>
+  <p class="hero-desc">
+    Communicate securely — even without internet. DMS creates a peer-to-peer WiFi Direct mesh network with AES-256 encrypted chat, real-time voice calls, and blockchain-backed message integrity.
+  </p>
+
+  <div class="hero-buttons">
+    <a class="btn-primary" href="https://github.com/abind4005-coder/WiFiDirectChat/releases" target="_blank">
+      ⬇ Download APK
+    </a>
+    <a class="btn-secondary" href="https://github.com/abind4005-coder/WiFiDirectChat" target="_blank">
+      ⭐ View on GitHub
+    </a>
+  </div>
+
+  <!-- Radar animation -->
+  <div class="radar-container">
+    <div class="radar-ring"></div>
+    <div class="radar-ring"></div>
+    <div class="radar-ring"></div>
+    <div class="radar-sweep"></div>
+    <div class="radar-center">📡</div>
+  </div>
+</section>
+
+<!-- ── STATS ── -->
+<div class="stats-bar">
+  <div class="stat">
+    <div class="stat-num">0%</div>
+    <div class="stat-label">Internet Needed</div>
+  </div>
+  <div class="stat">
+    <div class="stat-num">AES-256</div>
+    <div class="stat-label">Encryption Standard</div>
+  </div>
+  <div class="stat">
+    <div class="stat-num">8 MB/s</div>
+    <div class="stat-label">File Transfer Speed</div>
+  </div>
+  <div class="stat">
+    <div class="stat-num">SHA-256</div>
+    <div class="stat-label">Blockchain Ledger</div>
+  </div>
+</div>
+
+<!-- ── FEATURES ── -->
+<section id="features">
+  <div class="container">
+    <div class="text-center">
+      <span class="section-tag">Core Capabilities</span>
+      <h2 class="section-title">Everything. <span class="gradient-text">Offline.</span></h2>
+      <p class="section-desc">DMS packs enterprise-grade features into a completely offline, peer-to-peer Android app.</p>
+    </div>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <span class="feature-icon">📡</span>
+        <div class="feature-title">WiFi Direct P2P Mesh</div>
+        <div class="feature-desc">Connects phones directly using WiFi Direct (IEEE 802.11) — no router, no hotspot, no internet required. Works in disaster zones, remote areas, and offline events.</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🔒</span>
+        <div class="feature-title">AES-256 Encryption</div>
+        <div class="feature-desc">Every message is encrypted with AES-256-CBC before transmission. Your conversations stay private even if intercepted on the mesh network.</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">📞</span>
+        <div class="feature-title">Real-Time Voice Calls</div>
+        <div class="feature-desc">Full-duplex voice calling over TCP (port 9050) using Android AudioRecord + AudioTrack. Crystal-clear calls with mute, speaker toggle, and live call timer.</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">⛓️</span>
+        <div class="feature-title">Blockchain Message Integrity</div>
+        <div class="feature-desc">SHA-256 blockchain ledger records all messages with tamper-proof hashes. Verify every conversation hasn't been altered — ideal for secure, auditable comms.</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">📁</span>
+        <div class="feature-title">Offline File Transfer</div>
+        <div class="feature-desc">Send files of any type directly over the mesh at up to 8 MB/s. Images, PDFs, documents — all transferred securely without cloud storage.</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">📻</span>
+        <div class="feature-title">LoRa Long-Range Mode</div>
+        <div class="feature-desc">Arduino + LoRa module integration extends mesh range to kilometers. DMS bridges WiFi Direct with LoRa for true last-mile offline communication.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── HOW IT WORKS ── -->
+<section id="how">
+  <div class="container">
+    <div class="text-center">
+      <span class="section-tag">How It Works</span>
+      <h2 class="section-title">Connect in <span class="gradient-text">3 Steps</span></h2>
+      <p class="section-desc">No accounts. No servers. No internet. Just tap and connect.</p>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">01</div>
+        <div class="step-body">
+          <div class="step-title">Tap the Radar Scanner</div>
+          <div class="step-desc">Open DMS and press the circular radar button. The app scans for nearby Android devices with DMS installed using WiFi Direct discovery — no setup needed.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <div class="step-body">
+          <div class="step-title">Select & Connect</div>
+          <div class="step-desc">Nearby peers appear on your screen. Tap a device to initiate a secure WiFi Direct connection. AES-256 encryption is automatically negotiated during handshake.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <div class="step-body">
+          <div class="step-title">Chat, Call & Share</div>
+          <div class="step-desc">Send encrypted messages, make voice calls, transfer files, or record voice notes — all in real-time, completely offline. Every message is logged on the blockchain ledger.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── TECH STACK ── -->
+<section id="tech">
+  <div class="container">
+    <div class="text-center">
+      <span class="section-tag">Under The Hood</span>
+      <h2 class="section-title">Built With <span class="gradient-text">Precision</span></h2>
+      <p class="section-desc">A carefully chosen stack optimized for offline, peer-to-peer communication on Android.</p>
+    </div>
+    <div class="tech-grid">
+      <span class="tech-badge">☕ Java (Android)</span>
+      <span class="tech-badge">📡 WiFi Direct P2P</span>
+      <span class="tech-badge">🔒 AES-256-CBC</span>
+      <span class="tech-badge">⛓️ SHA-256 Blockchain</span>
+      <span class="tech-badge">🎙️ AudioRecord / AudioTrack</span>
+      <span class="tech-badge">🔥 Firebase Realtime DB</span>
+      <span class="tech-badge">📊 Firebase Analytics</span>
+      <span class="tech-badge">📻 Arduino + LoRa SX1278</span>
+      <span class="tech-badge">🔌 TCP Sockets (8888/8899/9050)</span>
+      <span class="tech-badge">📱 Android SDK 26–35</span>
+      <span class="tech-badge">🎨 Material 3 Design</span>
+      <span class="tech-badge">🌐 GitHub Pages</span>
+    </div>
+  </div>
+</section>
+
+<!-- ── TEAM ── -->
+<section id="team">
+  <div class="container">
+    <div class="text-center">
+      <span class="section-tag">The Builders</span>
+      <h2 class="section-title">Meet the <span class="gradient-text">Team</span></h2>
+      <p class="section-desc">CSE Final Year students from Buddha Institute of Technology, Gorakhpur — building the future of offline communication.</p>
+    </div>
+    <div class="team-grid">
+      <div class="team-card">
+        <div class="avatar">👨‍💻</div>
+        <div class="team-name">Aman Kumar Bind</div>
+        <div class="team-role">Architecture &amp; Backend</div>
+        <span class="team-leader-badge">🚀 Team Leader</span>
+      </div>
+      <div class="team-card">
+        <div class="avatar">👨‍💻</div>
+        <div class="team-name">Aryan Gond</div>
+        <div class="team-role">Networking &amp; P2P</div>
+      </div>
+      <div class="team-card">
+        <div class="avatar">👩‍💻</div>
+        <div class="team-name">Khushi Nishad</div>
+        <div class="team-role">UI/UX &amp; Frontend</div>
+      </div>
+      <div class="team-card">
+        <div class="avatar">👩‍💻</div>
+        <div class="team-name">Muskan Yadav</div>
+        <div class="team-role">Security &amp; Blockchain</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── DOWNLOAD CTA ── -->
+<section id="download">
+  <div class="container">
+    <span class="section-tag">Get The App</span>
+    <h2 class="section-title">Ready to go <span class="gradient-text">Offline?</span></h2>
+    <p class="section-desc" style="margin-bottom: 40px;">Download DMS and start communicating without any infrastructure. Works anywhere, anytime.</p>
+    <div class="hero-buttons" style="justify-content:center;">
+      <a class="btn-primary" href="https://github.com/abind4005-coder/WiFiDirectChat/releases" target="_blank">
+        ⬇ Download APK Free
+      </a>
+      <a class="btn-secondary" href="https://github.com/abind4005-coder/WiFiDirectChat" target="_blank">
+        🔍 View Source Code
+      </a>
+    </div>
+    <p style="margin-top: 24px; font-size: 13px; color: var(--muted);">Android 8.0+ required &nbsp;|&nbsp; No account needed &nbsp;|&nbsp; 100% Open Source</p>
+  </div>
+</section>
+
+<!-- ── FOOTER ── -->
+<footer>
+  <div class="footer-logo">DMS — DECENTRALIZED MESH SYSTEM</div>
+  <div class="footer-links">
+    <a href="#features">Features</a>
+    <a href="#how">How It Works</a>
+    <a href="#tech">Tech Stack</a>
+    <a href="#team">Team</a>
+    <a href="https://github.com/abind4005-coder/WiFiDirectChat" target="_blank">GitHub</a>
+  </div>
+  <div class="footer-copy">© 2025 Team DMS · All rights reserved</div>
+  <div class="footer-college">Buddha Institute of Technology (BIT), Gorakhpur · CSE Department · Batch 2025–26</div>
+</footer>
+
+</body>
+</html>
